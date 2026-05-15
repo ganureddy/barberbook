@@ -1,0 +1,22 @@
+{
+ "actions": [],
+ "creation": "2026-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "istable": 1,
+ "field_order": ["service", "duration_minutes", "price"],
+ "fields": [
+  {"fieldname": "service", "fieldtype": "Link", "options": "BB Service", "label": "Service", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "duration_minutes", "fieldtype": "Int", "label": "Duration (min)", "default": "30", "in_list_view": 1},
+  {"fieldname": "price", "fieldtype": "Currency", "label": "Price", "in_list_view": 1}
+ ],
+ "modified": "2026-05-16 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Barberbook",
+ "name": "BB Booking Service",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 0
+}

@@ -8,15 +8,25 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0E0E10"
+      "backgroundColor": "#FAF7F2"
     },
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "app.barberbook.client",
-      "buildNumber": "1"
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "BarberBook uses your location to show nearby shops and live walk-in queues.",
+        "NSCameraUsageDescription": "BarberBook uses the camera so you can attach photos to reviews and KYC documents.",
+        "NSPhotoLibraryUsageDescription": "BarberBook uses your photos to upload review images and KYC documents.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "app.barberbook.client",
@@ -26,7 +36,14 @@
         "backgroundColor": "#D4322C"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "INTERNET",
+        "READ_EXTERNAL_STORAGE",
+        "VIBRATE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -35,12 +52,32 @@
     "plugins": [
       "expo-localization",
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "BarberBook uses your location to show nearby shops and live queue ETAs."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "BarberBook needs access to your photos so you can attach images to reviews."
+        }
+      ]
     ],
     "extra": {
       "frappe": {
-        "siteUrlEnv": "EXPO_PUBLIC_FRAPPE_SITE_URL"
+        "siteUrlEnv": "EXPO_PUBLIC_FRAPPE_URL"
+      },
+      "eas": {
+        "projectId": "00000000-0000-0000-0000-000000000000"
       }
+    },
+    "owner": "barberbook",
+    "updates": {
+      "url": "https://u.expo.dev/00000000-0000-0000-0000-000000000000",
+      "fallbackToCacheTimeout": 0
     }
   }
 }

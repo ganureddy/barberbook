@@ -1,0 +1,28 @@
+{
+ "actions": [],
+ "autoname": "format:LOYTXN-{####}",
+ "creation": "2026-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["customer", "shop", "booking", "delta", "reason"],
+ "fields": [
+  {"fieldname": "customer", "fieldtype": "Link", "options": "User", "label": "Customer", "reqd": 1, "in_list_view": 1, "in_standard_filter": 1},
+  {"fieldname": "shop", "fieldtype": "Link", "options": "BB Shop", "label": "Shop", "reqd": 1, "in_list_view": 1, "in_standard_filter": 1},
+  {"fieldname": "booking", "fieldtype": "Link", "options": "BB Booking", "label": "Booking"},
+  {"fieldname": "delta", "fieldtype": "Int", "label": "Delta", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "reason", "fieldtype": "Select", "options": "Booking\nRedemption\nReferral\nManual\nExpiry", "default": "Booking", "label": "Reason", "in_list_view": 1, "in_standard_filter": 1}
+ ],
+ "modified": "2026-05-16 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Barberbook",
+ "name": "BB Loyalty Transaction",
+ "owner": "Administrator",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1},
+  {"role": "Shop Owner", "read": 1, "report": 1},
+  {"role": "Customer", "read": 1, "if_owner": 1}
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

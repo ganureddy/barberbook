@@ -1,0 +1,118 @@
+name: mobile-build
+
+on:
+  push:
+    branches: [main]
+    tags: ["mobile-v*"]
+    paths:
+      - "barberbook/frontend/mobile/**"
+      - ".github/workflows/mobile-build.yml"
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: "EAS profile to build"
+        required: true
+        default: "preview"
+        type: choice
+        options:
+          - development
+          - preview
+          - production
+      submit:
+        description: "Submit to stores after build (production only)"
+        required: false
+        default: "false"
+        type: boolean
+
+defaults:
+  run:
+    working-directory: barberbook/frontend/mobile
+
+env:
+  EXPO_NO_TELEMETRY: "1"
+
+jobs:
+  ci:
+    name: typecheck · lint · test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.18.0
+          cache: npm
+          cache-dependency-path: barberbook/frontend/mobile/package-lock.json
+      - name: Install
+        run: npm ci --no-audit --no-fund
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Test
+        run: npm test -- --ci
+
+  build:
+    name: EAS · ${{ github.ref_type == 'tag' && 'production' || (github.event.inputs.profile || 'preview') }}
+    needs: ci
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.18.0
+          cache: npm
+          cache-dependency-path: barberbook/frontend/mobile/package-lock.json
+      - name: Install
+        run: npm ci --no-audit --no-fund
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Pick profile
+        id: profile
+        run: |
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            echo "name=production" >> $GITHUB_OUTPUT
+          else
+            echo "name=${{ github.event.inputs.profile || 'preview' }}" >> $GITHUB_OUTPUT
+          fi
+      - name: Build
+        env:
+          EXPO_PUBLIC_SENTRY_DSN_STAGING: ${{ secrets.SENTRY_DSN_STAGING }}
+          EXPO_PUBLIC_SENTRY_DSN_PROD: ${{ secrets.SENTRY_DSN_PROD }}
+        run: eas build --non-interactive --no-wait --platform all --profile ${{ steps.profile.outputs.name }}
+      - name: Submit (production only)
+        if: github.ref_type == 'tag' || github.event.inputs.submit == 'true'
+        run: eas submit --non-interactive --platform all --profile production --latest
+
+  backend-migrate:
+    name: bench migrate · ${{ github.ref_type == 'tag' && 'prod' || 'staging' }}
+    needs: ci
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref_type == 'tag'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pick site
+        id: site
+        run: |
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            echo "site=app.barberbook.app"        >> $GITHUB_OUTPUT
+            echo "ssh=${{ secrets.PROD_SSH_HOST }}"     >> $GITHUB_OUTPUT
+          else
+            echo "site=staging.barberbook.app"    >> $GITHUB_OUTPUT
+            echo "ssh=${{ secrets.STAGING_SSH_HOST }}"  >> $GITHUB_OUTPUT
+          fi
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.BENCH_SSH_KEY }}
+      - name: Pull + migrate on bench
+        run: |
+          ssh -o StrictHostKeyChecking=no \
+              ${{ steps.site.outputs.ssh }} \
+              "cd ~/frappe-bench && \
+               bench --site ${{ steps.site.outputs.site }} migrate && \
+               bench --site ${{ steps.site.outputs.site }} clear-cache && \
+               bench restart"

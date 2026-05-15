@@ -1,0 +1,24 @@
+{
+ "actions": [],
+ "creation": "2026-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "istable": 1,
+ "field_order": ["day", "start_time", "end_time", "seat", "barber"],
+ "fields": [
+  {"fieldname": "day", "fieldtype": "Select", "options": "Mon\nTue\nWed\nThu\nFri\nSat\nSun", "label": "Day", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "start_time", "fieldtype": "Time", "label": "Start", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "end_time", "fieldtype": "Time", "label": "End", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "seat", "fieldtype": "Link", "options": "BB Seat", "label": "Seat", "in_list_view": 1},
+  {"fieldname": "barber", "fieldtype": "Link", "options": "BB Barber", "label": "Barber", "reqd": 1, "in_list_view": 1}
+ ],
+ "modified": "2026-05-16 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Barberbook",
+ "name": "BB Roster Slot",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 0
+}

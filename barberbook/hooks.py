@@ -1,244 +1,101 @@
+"""Frappe app metadata + integrations for BarberBook.
+
+This file is the single declarative entry-point Frappe reads at install
+and migrate time. The mobile client never reads it directly, but every
+realtime event, scheduled job, and DocType permission flows from here,
+so keep edits surgical and grouped.
+"""
+
 app_name = "barberbook"
-app_title = "Barberbook"
-app_publisher = "ganureddy54@gmail.com"
-app_description = "BarberBook"
-app_email = "ganureddy54@gmail.com"
-app_license = "mit"
+app_title = "BarberBook"
+app_publisher = "BarberBook"
+app_description = "Booking, walk-in, and roster platform for hair & grooming salons."
+app_email = "engineering@barberbook.app"
+app_license = "MIT"
+app_logo_url = "/assets/barberbook/images/logo.svg"
+app_icon = "/assets/barberbook/images/icon.svg"
 
-# Apps
-# ------------------
+required_apps = ["frappe"]
 
-# required_apps = []
+# ---------------------------------------------------------------------------
+# Fixtures
+# ---------------------------------------------------------------------------
+# `bench migrate` re-applies these on every deploy. We ship Roles only —
+# Custom DocPerms are baked into each DocType JSON, and DocTypes
+# themselves are discovered via the doctype/ folder structure.
+fixtures = [
+    {"dt": "Role", "filters": [["name", "in", ["Customer", "Shop Owner", "Barber Staff"]]]},
+]
 
-# Each item in the list will be shown as an app in the apps page
-# add_to_apps_screen = [
-# 	{
-# 		"name": "barberbook",
-# 		"logo": "/assets/barberbook/logo.png",
-# 		"title": "Barberbook",
-# 		"route": "/barberbook",
-# 		"has_permission": "barberbook.api.permission.has_app_permission"
-# 	}
-# ]
+# ---------------------------------------------------------------------------
+# Document events → realtime broadcasts
+# ---------------------------------------------------------------------------
+# The mobile client subscribes to `walkin_queue:{shop}` and
+# `booking:{user}` over Frappe Realtime (socket.io). Whenever the
+# underlying record changes, we re-emit the full snapshot so clients
+# don't need to keep their own state machine.
+doc_events = {
+    "BB Walkin Ticket": {
+        "after_insert": "barberbook.realtime.publish_walkin_change",
+        "on_update": "barberbook.realtime.publish_walkin_change",
+        "on_trash": "barberbook.realtime.publish_walkin_change",
+    },
+    "BB Booking": {
+        "after_insert": "barberbook.realtime.publish_booking_change",
+        "on_update": "barberbook.realtime.publish_booking_change",
+    },
+    "BB Review": {
+        "after_insert": "barberbook.realtime.publish_review_created",
+    },
+}
 
-# Includes in <head>
-# ------------------
+# ---------------------------------------------------------------------------
+# Scheduled tasks
+# ---------------------------------------------------------------------------
+scheduler_events = {
+    "hourly": [
+        "barberbook.api.walkin.recompute_eta",
+    ],
+    "daily": [
+        "barberbook.tasks.expire_loyalty",
+    ],
+}
 
-# include js, css files in header of desk.html
-# app_include_css = "/assets/barberbook/css/barberbook.css"
-# app_include_js = "/assets/barberbook/js/barberbook.js"
+# ---------------------------------------------------------------------------
+# CORS — the mobile app talks to us cross-origin in dev / preview
+# ---------------------------------------------------------------------------
+# Production Expo builds use `barberbook.app` directly; staging uses
+# `staging.barberbook.app`. Both are explicitly allowed below; bench
+# operators can extend via site_config.json `allow_cors` if they need
+# additional origins.
+allow_cors = "*"
 
-# include js, css files in header of web template
-# web_include_css = "/assets/barberbook/css/barberbook.css"
-# web_include_js = "/assets/barberbook/js/barberbook.js"
+# ---------------------------------------------------------------------------
+# Override Login API for OTP support
+# ---------------------------------------------------------------------------
+# Customers sign in with OTP via `/api/method/barberbook.api.auth.verify_otp`,
+# but we still want `frappe.auth` to recognise our session — no override
+# needed; verify_otp uses LoginManager.login_as.
 
-# include custom scss in every website theme (without file extension ".scss")
-# website_theme_scss = "barberbook/public/scss/website"
+# ---------------------------------------------------------------------------
+# Idempotency-Key passthrough
+# ---------------------------------------------------------------------------
+# Allow the `Idempotency-Key` header through Frappe's request preprocessor.
+# Frappe reads request.headers without a strict allowlist by default, so
+# nothing extra is required here — but we declare the requirement for ops
+# audits.
 
-# include js, css files in header of web form
-# webform_include_js = {"doctype": "public/js/doctype.js"}
-# webform_include_css = {"doctype": "public/css/doctype.css"}
+# ---------------------------------------------------------------------------
+# Static assets — used by the desk-side admin views, not the mobile app.
+# ---------------------------------------------------------------------------
+website_route_rules = []
 
-# include js in page
-# page_js = {"page" : "public/js/file.js"}
-
-# include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
-# doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
-# doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
-# doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
-
-# Svg Icons
-# ------------------
-# include app icons in desk
-# app_include_icons = "barberbook/public/icons.svg"
-
-# Home Pages
-# ----------
-
-# application home page (will override Website Settings)
-# home_page = "login"
-
-# website user home page (by Role)
-# role_home_page = {
-# 	"Role": "home_page"
-# }
-
-# Generators
-# ----------
-
-# automatically create page for each record of this doctype
-# website_generators = ["Web Page"]
-
-# Jinja
-# ----------
-
-# add methods and filters to jinja environment
-# jinja = {
-# 	"methods": "barberbook.utils.jinja_methods",
-# 	"filters": "barberbook.utils.jinja_filters"
-# }
-
-# Installation
-# ------------
-
-# before_install = "barberbook.install.before_install"
-# after_install = "barberbook.install.after_install"
-
-# Uninstallation
-# ------------
-
-# before_uninstall = "barberbook.uninstall.before_uninstall"
-# after_uninstall = "barberbook.uninstall.after_uninstall"
-
-# Integration Setup
-# ------------------
-# To set up dependencies/integrations with other apps
-# Name of the app being installed is passed as an argument
-
-# before_app_install = "barberbook.utils.before_app_install"
-# after_app_install = "barberbook.utils.after_app_install"
-
-# Integration Cleanup
-# -------------------
-# To clean up dependencies/integrations with other apps
-# Name of the app being uninstalled is passed as an argument
-
-# before_app_uninstall = "barberbook.utils.before_app_uninstall"
-# after_app_uninstall = "barberbook.utils.after_app_uninstall"
-
-# Desk Notifications
-# ------------------
-# See frappe.core.notifications.get_notification_config
-
-# notification_config = "barberbook.notifications.get_notification_config"
-
-# Permissions
-# -----------
-# Permissions evaluated in scripted ways
-
-# permission_query_conditions = {
-# 	"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
-# }
-#
-# has_permission = {
-# 	"Event": "frappe.desk.doctype.event.event.has_permission",
-# }
-
-# DocType Class
-# ---------------
-# Override standard doctype classes
-
-# override_doctype_class = {
-# 	"ToDo": "custom_app.overrides.CustomToDo"
-# }
-
-# Document Events
-# ---------------
-# Hook on document methods and events
-
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
-
-# Scheduled Tasks
-# ---------------
-
-# scheduler_events = {
-# 	"all": [
-# 		"barberbook.tasks.all"
-# 	],
-# 	"daily": [
-# 		"barberbook.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"barberbook.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"barberbook.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"barberbook.tasks.monthly"
-# 	],
-# }
-
-# Testing
-# -------
-
-# before_tests = "barberbook.install.before_tests"
-
-# Overriding Methods
-# ------------------------------
-#
-# override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "barberbook.event.get_events"
-# }
-#
-# each overriding function accepts a `data` argument;
-# generated from the base implementation of the doctype dashboard,
-# along with any modifications made in other Frappe apps
-# override_doctype_dashboards = {
-# 	"Task": "barberbook.task.get_dashboard_data"
-# }
-
-# exempt linked doctypes from being automatically cancelled
-#
-# auto_cancel_exempted_doctypes = ["Auto Repeat"]
-
-# Ignore links to specified DocTypes when deleting documents
-# -----------------------------------------------------------
-
-# ignore_links_on_delete = ["Communication", "ToDo"]
-
-# Request Events
-# ----------------
-# before_request = ["barberbook.utils.before_request"]
-# after_request = ["barberbook.utils.after_request"]
-
-# Job Events
-# ----------
-# before_job = ["barberbook.utils.before_job"]
-# after_job = ["barberbook.utils.after_job"]
-
-# User Data Protection
-# --------------------
-
-# user_data_fields = [
-# 	{
-# 		"doctype": "{doctype_1}",
-# 		"filter_by": "{filter_by}",
-# 		"redact_fields": ["{field_1}", "{field_2}"],
-# 		"partial": 1,
-# 	},
-# 	{
-# 		"doctype": "{doctype_2}",
-# 		"filter_by": "{filter_by}",
-# 		"partial": 1,
-# 	},
-# 	{
-# 		"doctype": "{doctype_3}",
-# 		"strict": False,
-# 	},
-# 	{
-# 		"doctype": "{doctype_4}"
-# 	}
-# ]
-
-# Authentication and authorization
-# --------------------------------
-
-# auth_hooks = [
-# 	"barberbook.auth.validate"
-# ]
-
-# Automatically update python controller files with type annotations for this app.
-# export_python_type_annotations = True
-
-# default_log_clearing_doctypes = {
-# 	"Logging DocType Name": 30  # days to retain logs
-# }
-
+# ---------------------------------------------------------------------------
+# User data protection (GDPR)
+# ---------------------------------------------------------------------------
+user_data_fields = [
+    {"doctype": "BB Booking", "filter_by": "customer", "redact_fields": ["notes"], "partial": 1},
+    {"doctype": "BB Walkin Ticket", "filter_by": "customer", "redact_fields": ["customer_phone"], "partial": 1},
+    {"doctype": "BB Review", "filter_by": "customer", "redact_fields": ["body"], "partial": 1},
+    {"doctype": "BB Push Device", "filter_by": "user", "strict": True},
+]

@@ -1,0 +1,28 @@
+{
+ "actions": [],
+ "autoname": "format:ROSTER-{shop}-{week_starting}",
+ "creation": "2026-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["shop", "week_starting", "status", "conflict_count", "shifts"],
+ "fields": [
+  {"fieldname": "shop", "fieldtype": "Link", "options": "BB Shop", "label": "Shop", "reqd": 1, "in_list_view": 1, "in_standard_filter": 1},
+  {"fieldname": "week_starting", "fieldtype": "Date", "label": "Week Starting", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "status", "fieldtype": "Select", "options": "Draft\nPublished\nArchived", "default": "Draft", "label": "Status", "in_list_view": 1, "in_standard_filter": 1},
+  {"fieldname": "conflict_count", "fieldtype": "Int", "label": "Conflicts", "default": "0", "in_list_view": 1},
+  {"fieldname": "shifts", "fieldtype": "Table", "options": "BB Roster Slot", "label": "Shifts"}
+ ],
+ "modified": "2026-05-16 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Barberbook",
+ "name": "BB Roster",
+ "owner": "Administrator",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+  {"role": "Shop Owner", "read": 1, "write": 1, "create": 1, "delete": 1, "if_owner": 1},
+  {"role": "Barber Staff", "read": 1}
+ ],
+ "sort_field": "week_starting",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

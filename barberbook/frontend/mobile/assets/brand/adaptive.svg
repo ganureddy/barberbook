@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Adaptive-icon foreground. Android composites this on top of the
+  background color declared in app.json (#D4322C). Keep the design
+  inside the inner safe-area circle (66% radius).
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="pole" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FAF7F2"/>
+      <stop offset="100%" stop-color="#1B1A18"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(512 512) rotate(20)">
+    <rect x="-100" y="-300" width="200" height="600" rx="100" fill="url(#pole)"/>
+    <rect x="-100" y="-300" width="200" height="100" rx="50" fill="#FAF7F2"/>
+    <rect x="-100" y="200" width="200" height="100" rx="50" fill="#1B1A18"/>
+  </g>
+  <text x="512" y="780" font-family="Anton, 'Helvetica Neue', Arial, sans-serif"
+        font-size="120" font-weight="800" letter-spacing="12"
+        fill="#FAF7F2" text-anchor="middle">BB</text>
+</svg>

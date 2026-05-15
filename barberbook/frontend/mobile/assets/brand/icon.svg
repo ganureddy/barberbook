@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  BarberBook brand mark  source SVG.
+
+  Render to PNG with a tool of your choice (rsvg-convert, Inkscape,
+  Figma export). Targets that the EAS / Expo asset pipeline expects:
+
+    assets/icon.png             1024×1024  (iOS app icon, no transparency)
+    assets/adaptive-icon.png    1024×1024  (Android adaptive icon FG)
+    assets/splash-icon.png      1024×1024  (centered logomark)
+    assets/favicon.png          48×48      (web)
+
+  Quick rebuild from the repo root (requires `librsvg` / `rsvg-convert`):
+
+    cd frontend/mobile/assets
+    rsvg-convert -w 1024 -h 1024 brand/icon.svg          > icon.png
+    rsvg-convert -w 1024 -h 1024 brand/adaptive.svg      > adaptive-icon.png
+    rsvg-convert -w 1024 -h 1024 brand/splash.svg        > splash-icon.png
+    rsvg-convert -w 48   -h 48   brand/favicon.svg       > favicon.png
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1B1A18"/>
+      <stop offset="100%" stop-color="#0E0E10"/>
+    </linearGradient>
+    <linearGradient id="pole" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FAF7F2"/>
+      <stop offset="50%" stop-color="#D4322C"/>
+      <stop offset="100%" stop-color="#0E0E10"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded square background. -->
+  <rect width="1024" height="1024" rx="220" ry="220" fill="url(#bg)"/>
+
+  <!-- Barber-pole stripe. -->
+  <g transform="translate(512 512) rotate(20)">
+    <rect x="-90" y="-360" width="180" height="720" rx="90" fill="url(#pole)"/>
+    <path d="M-78 -340 L78 -340 L60 -260 L-60 -260 Z" fill="#FAF7F2" opacity="0.85"/>
+    <path d="M-78 340 L78 340 L60 260 L-60 260 Z" fill="#0E0E10"/>
+  </g>
+
+  <!-- BB monogram. -->
+  <text x="512" y="900" font-family="Anton, 'Helvetica Neue', Arial, sans-serif"
+        font-size="140" font-weight="800" letter-spacing="14"
+        fill="#FAF7F2" text-anchor="middle">BB</text>
+</svg>

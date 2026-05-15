@@ -1,0 +1,43 @@
+{
+ "actions": [],
+ "autoname": "format:BBK-{####}",
+ "creation": "2026-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "customer", "shop", "barber", "scheduled_at", "duration_minutes",
+  "services", "status", "total_amount", "currency", "payment_status",
+  "payment_method", "token_code", "loyalty_redeemed", "notes"
+ ],
+ "fields": [
+  {"fieldname": "customer", "fieldtype": "Link", "options": "User", "label": "Customer", "reqd": 1, "in_list_view": 1, "in_standard_filter": 1},
+  {"fieldname": "shop", "fieldtype": "Link", "options": "BB Shop", "label": "Shop", "reqd": 1, "in_list_view": 1, "in_standard_filter": 1},
+  {"fieldname": "barber", "fieldtype": "Link", "options": "BB Barber", "label": "Barber", "in_list_view": 1, "in_standard_filter": 1},
+  {"fieldname": "scheduled_at", "fieldtype": "Datetime", "label": "Scheduled At", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "duration_minutes", "fieldtype": "Int", "label": "Duration (min)", "default": "30"},
+  {"fieldname": "services", "fieldtype": "Table", "options": "BB Booking Service", "label": "Services"},
+  {"fieldname": "status", "fieldtype": "Select", "options": "Confirmed\nCheckedIn\nInService\nCompleted\nCancelled\nNoShow", "default": "Confirmed", "label": "Status", "in_list_view": 1, "in_standard_filter": 1},
+  {"fieldname": "total_amount", "fieldtype": "Currency", "label": "Total", "options": "currency", "in_list_view": 1},
+  {"fieldname": "currency", "fieldtype": "Link", "options": "Currency", "label": "Currency", "default": "INR"},
+  {"fieldname": "payment_status", "fieldtype": "Select", "options": "Pending\nAuthorized\nPaid\nRefunded", "default": "Pending", "label": "Payment Status"},
+  {"fieldname": "payment_method", "fieldtype": "Select", "options": "\nCard\nUPI\nWallet\nApplePay\nGooglePay\nCash", "label": "Payment Method"},
+  {"fieldname": "token_code", "fieldtype": "Data", "label": "Token Code"},
+  {"fieldname": "loyalty_redeemed", "fieldtype": "Int", "label": "Loyalty Points Redeemed", "default": "0"},
+  {"fieldname": "notes", "fieldtype": "Small Text", "label": "Notes"}
+ ],
+ "modified": "2026-05-16 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Barberbook",
+ "name": "BB Booking",
+ "owner": "Administrator",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1},
+  {"role": "Shop Owner", "read": 1, "write": 1, "create": 1, "report": 1, "export": 1},
+  {"role": "Barber Staff", "read": 1, "write": 1},
+  {"role": "Customer", "read": 1, "write": 1, "create": 1, "if_owner": 1}
+ ],
+ "search_fields": "customer,shop,token_code",
+ "sort_field": "scheduled_at",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

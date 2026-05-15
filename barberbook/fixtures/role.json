@@ -1,0 +1,44 @@
+[
+ {
+  "doctype": "Role",
+  "name": "Shop Owner",
+  "role_name": "Shop Owner",
+  "desk_access": 0,
+  "search_bar": 1,
+  "notifications": 1,
+  "list_sidebar": 1,
+  "bulk_actions": 1,
+  "view_switcher": 1,
+  "form_sidebar": 1,
+  "timeline": 1,
+  "dashboard": 1
+ },
+ {
+  "doctype": "Role",
+  "name": "Barber Staff",
+  "role_name": "Barber Staff",
+  "desk_access": 0,
+  "search_bar": 1,
+  "notifications": 1,
+  "list_sidebar": 1,
+  "bulk_actions": 0,
+  "view_switcher": 0,
+  "form_sidebar": 1,
+  "timeline": 1,
+  "dashboard": 1
+ },
+ {
+  "doctype": "Role",
+  "name": "Customer",
+  "role_name": "Customer",
+  "desk_access": 0,
+  "search_bar": 0,
+  "notifications": 1,
+  "list_sidebar": 0,
+  "bulk_actions": 0,
+  "view_switcher": 0,
+  "form_sidebar": 0,
+  "timeline": 1,
+  "dashboard": 0
+ }
+]

@@ -1,0 +1,37 @@
+{
+ "actions": [],
+ "autoname": "format:PAY-{####}",
+ "creation": "2026-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "booking", "shop", "customer", "amount", "currency",
+  "method", "status", "gateway_ref", "captured_at",
+  "payment_entry"
+ ],
+ "fields": [
+  {"fieldname": "booking", "fieldtype": "Link", "options": "BB Booking", "label": "Booking", "reqd": 1, "in_list_view": 1, "in_standard_filter": 1},
+  {"fieldname": "shop", "fieldtype": "Link", "options": "BB Shop", "label": "Shop", "in_standard_filter": 1},
+  {"fieldname": "customer", "fieldtype": "Link", "options": "User", "label": "Customer", "in_standard_filter": 1},
+  {"fieldname": "amount", "fieldtype": "Currency", "label": "Amount", "options": "currency", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "currency", "fieldtype": "Link", "options": "Currency", "label": "Currency", "default": "INR"},
+  {"fieldname": "method", "fieldtype": "Select", "options": "Card\nUPI\nWallet\nApplePay\nGooglePay\nCash", "label": "Method", "in_list_view": 1},
+  {"fieldname": "status", "fieldtype": "Select", "options": "Pending\nAuthorized\nCaptured\nFailed\nRefunded", "default": "Pending", "label": "Status", "in_list_view": 1, "in_standard_filter": 1},
+  {"fieldname": "gateway_ref", "fieldtype": "Data", "label": "Gateway Ref"},
+  {"fieldname": "captured_at", "fieldtype": "Datetime", "label": "Captured At"},
+  {"fieldname": "payment_entry", "fieldtype": "Link", "options": "Payment Entry", "label": "Payment Entry"}
+ ],
+ "modified": "2026-05-16 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Barberbook",
+ "name": "BB Payment",
+ "owner": "Administrator",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1},
+  {"role": "Shop Owner", "read": 1, "report": 1, "export": 1},
+  {"role": "Customer", "read": 1, "if_owner": 1}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

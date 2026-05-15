@@ -1,0 +1,39 @@
+{
+ "actions": [],
+ "autoname": "format:SVC-{####}",
+ "creation": "2026-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "service_name", "shop", "category", "price", "currency",
+  "duration_minutes", "description", "is_active", "icon", "popularity"
+ ],
+ "fields": [
+  {"fieldname": "service_name", "fieldtype": "Data", "label": "Service", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "shop", "fieldtype": "Link", "options": "BB Shop", "label": "Shop", "reqd": 1, "in_list_view": 1, "in_standard_filter": 1},
+  {"fieldname": "category", "fieldtype": "Select", "options": "Hair\nBeard\nColor\nGrooming\nKids\nCombo\nOther", "default": "Hair", "label": "Category", "in_list_view": 1, "in_standard_filter": 1},
+  {"fieldname": "price", "fieldtype": "Currency", "label": "Price", "reqd": 1, "in_list_view": 1, "options": "currency"},
+  {"fieldname": "currency", "fieldtype": "Link", "options": "Currency", "label": "Currency", "default": "INR"},
+  {"fieldname": "duration_minutes", "fieldtype": "Int", "label": "Duration (min)", "default": "30", "in_list_view": 1},
+  {"fieldname": "description", "fieldtype": "Small Text", "label": "Description"},
+  {"fieldname": "is_active", "fieldtype": "Check", "default": "1", "label": "Active", "in_list_view": 1},
+  {"fieldname": "icon", "fieldtype": "Select", "options": "scissors\nrazor\nstar\nsparkle\nbrush\nclock", "default": "scissors", "label": "Icon"},
+  {"fieldname": "popularity", "fieldtype": "Int", "label": "Popularity", "default": "0"}
+ ],
+ "modified": "2026-05-16 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Barberbook",
+ "name": "BB Service",
+ "owner": "Administrator",
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+  {"role": "Shop Owner", "read": 1, "write": 1, "create": 1, "delete": 1},
+  {"role": "Barber Staff", "read": 1},
+  {"role": "Customer", "read": 1}
+ ],
+ "search_fields": "service_name,category",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "title_field": "service_name",
+ "track_changes": 1
+}
