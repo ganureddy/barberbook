@@ -1,46 +1,53 @@
-import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useRoute, type RouteProp } from '@react-navigation/native';
 import React from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useBarbersForShop } from '../../api/hooks';
+import { useShop } from '../../api/hooks';
+import { Text } from '../../components';
+import { useTheme } from '../../design/ThemeProvider';
+import { spacing } from '../../design/tokens';
 import type { DiscoverStackParamList } from '../../navigation/types';
-import { ScreenPlaceholder } from '../_components/ScreenPlaceholder';
 
-type Nav = NativeStackNavigationProp<DiscoverStackParamList, 'ShopBarbersTab'>;
+import { BarbersTab } from './_shop/BarbersTab';
+
 type Rt = RouteProp<DiscoverStackParamList, 'ShopBarbersTab'>;
 
+/**
+ * Standalone "Barbers" view — same content the ShopDetail in-screen tab
+ * shows, but reachable via deep link `barberbook://shop/:id/barbers` and
+ * registered as its own route in the canvas screen list.
+ */
 export function ShopBarbersTab() {
-  const nav = useNavigation<Nav>();
   const { params } = useRoute<Rt>();
-  const barbersQ = useBarbersForShop(params.id);
+  const { theme } = useTheme();
+  const shopQ = useShop(params.id);
 
   return (
-    <ScreenPlaceholder
-      title="Barbers"
-      subtitle={
-        barbersQ.data
-          ? `${barbersQ.data.length} barber${barbersQ.data.length === 1 ? '' : 's'} on staff`
-          : 'Loading…'
-      }
-      role="Customer"
-      routeName="ShopBarbersTab"
-      params={params}
-      nextSteps={[
-        {
-          label: 'Back to shop',
-          variant: 'primary',
-          onPress: () => {
-            nav.goBack();
-          },
-        },
-        {
-          label: 'See reviews',
-          variant: 'ghost',
-          onPress: () => {
-            nav.navigate('ShopReviewsTab', { id: params.id });
-          },
-        },
-      ]}
-    />
+    <SafeAreaView style={[styles.root, { backgroundColor: theme.bg }]} edges={['left', 'right']}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <Text variant="display">{shopQ.data?.shop_name ?? 'Shop'}</Text>
+          <Text variant="caption" color={theme.muted}>
+            {shopQ.data?.city ?? ''}
+          </Text>
+        </View>
+
+        <BarbersTab shopId={params.id} />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+  content: {
+    paddingBottom: spacing['3xl'],
+  },
+  header: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
+    gap: 4,
+  },
+});

@@ -179,9 +179,24 @@ export type RpcPayload = object;
  * Convenience wrapper around `api.post` for `frappe.client.*` and custom
  * RPC methods. Frappe wraps the return value in `{message: ...}` — this
  * unwraps it so callers see the payload directly.
+ *
+ * `options.headers` lets a caller stamp extra headers (typically
+ * `Idempotency-Key`) without dropping out of the typed envelope helper.
  */
-export async function rpc<T>(method: string, payload?: RpcPayload): Promise<T> {
-  const res = await api.post<{ message: T }>(`/api/method/${method}`, payload ?? {});
+export interface RpcOptions {
+  headers?: Record<string, string>;
+}
+
+export async function rpc<T>(
+  method: string,
+  payload?: RpcPayload,
+  options?: RpcOptions,
+): Promise<T> {
+  const res = await api.post<{ message: T }>(
+    `/api/method/${method}`,
+    payload ?? {},
+    options?.headers ? { headers: options.headers } : undefined,
+  );
   return res.data.message;
 }
 

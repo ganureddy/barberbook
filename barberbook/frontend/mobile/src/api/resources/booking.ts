@@ -1,3 +1,4 @@
+import { getDraftIdempotencyKey } from '../../lib/idempotency';
 import { rpc } from '../client';
 import type { Booking, BookingService, BookingStatus } from '../types';
 
@@ -34,10 +35,24 @@ export interface CreateBookingPayload {
   scheduled_at: string;
   services: BookingService[];
   notes?: string;
+  /** Optional client hint — server still computes the canonical total. */
+  client_total?: number;
+  /** Loyalty redemption applied. Server validates against the customer's balance. */
+  loyalty_points_to_redeem?: number;
+  /** Selected payment method, one of 'upi' | 'card' | 'cash'. */
+  payment_method?: 'upi' | 'card' | 'cash';
 }
 
+/**
+ * Create a booking with an `Idempotency-Key` header, sourced from the
+ * draft. The server uses this to dedupe retries, so a flaky network can't
+ * double-book the same chair. The key is cleared on successful create
+ * (caller responsibility — `useBookingDraftStore.reset()` does it).
+ */
 export function createBooking(payload: CreateBookingPayload): Promise<Booking> {
-  return rpc<Booking>('barberbook.api.booking.create', payload);
+  return rpc<Booking>('barberbook.api.booking.create', payload, {
+    headers: { 'Idempotency-Key': getDraftIdempotencyKey() },
+  });
 }
 
 export function updateBookingStatus(name: string, status: BookingStatus): Promise<Booking> {

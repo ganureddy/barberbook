@@ -1,3 +1,4 @@
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import {
   DefaultTheme,
   DarkTheme as NavDarkTheme,
@@ -20,6 +21,7 @@ import { useAppFonts } from './src/design/typography';
 import { initI18n } from './src/i18n';
 import { RootNavigator, linking, navigationRef } from './src/navigation';
 import { useAuthStore } from './src/store/useAuthStore';
+import { useBookingDraftStore } from './src/store/useBookingDraftStore';
 
 // Initialize i18n eagerly at module load so screens can call `useTranslation()`
 // from their first render without an extra hydration tick.
@@ -43,7 +45,9 @@ export default function App() {
       <SafeAreaProvider>
         <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
           <ThemeProvider>
-            <Root />
+            <BottomSheetModalProvider>
+              <Root />
+            </BottomSheetModalProvider>
           </ThemeProvider>
         </PersistQueryClientProvider>
       </SafeAreaProvider>
@@ -56,11 +60,14 @@ function Root() {
   const hydrate = useAuthStore((s) => s.hydrate);
   const { mode, theme } = useTheme();
 
+  const hydrateDraft = useBookingDraftStore((s) => s.hydrate);
+
   useEffect(() => {
     hydrate().catch(() => {
       /* swallowed — auth hydration errors surface via toast */
     });
-  }, [hydrate]);
+    hydrateDraft();
+  }, [hydrate, hydrateDraft]);
 
   // React Navigation theme — wires the stock dark/light split into our
   // palette so headers and the tab bar honour the active mode.

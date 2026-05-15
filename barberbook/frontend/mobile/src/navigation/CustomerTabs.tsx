@@ -46,7 +46,12 @@ function DiscoverStack() {
       <Discover.Screen
         name="FiltersSheet"
         component={FiltersSheet}
-        options={{ presentation: 'modal', title: 'Filters' }}
+        options={{
+          presentation: 'transparentModal',
+          headerShown: false,
+          animation: 'fade',
+          contentStyle: { backgroundColor: 'transparent' },
+        }}
       />
       <Discover.Screen name="ShopDetail" component={ShopDetail} options={{ title: '' }} />
       <Discover.Screen

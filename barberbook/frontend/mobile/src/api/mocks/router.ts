@@ -9,6 +9,7 @@
 
 import type { AxiosRequestConfig, AxiosResponse } from 'axios';
 
+import { channels, publishLocal } from '../realtime';
 import type {
   Booking,
   FrappeBaseDoc,
@@ -322,11 +323,12 @@ export function routeMock(config: AxiosRequestConfig): AxiosResponse | null {
 
   if (url.endsWith('/api/method/barberbook.api.walkin.join')) {
     const merged = { ...params, ...(body ?? {}) } as Record<string, unknown>;
+    const shopId = String(merged.shop ?? '');
     const ticket = {
       ...baseAuditMock(),
       doctype: 'BB Walkin Ticket' as const,
       name: `MOCK-WLK-${Date.now()}`,
-      shop: String(merged.shop ?? ''),
+      shop: shopId,
       customer_phone: merged.customer_phone as string | undefined,
       token_number: String(WALKIN_TICKETS.length + 7).padStart(2, '0'),
       position_in_queue: WALKIN_TICKETS.length + 1,
@@ -335,7 +337,37 @@ export function routeMock(config: AxiosRequestConfig): AxiosResponse | null {
       joined_at: new Date().toISOString(),
     } satisfies WalkinTicket;
     WALKIN_TICKETS.push(ticket);
+    // Mirror what `frappe.publish_realtime('walkin_queue:<shop>', …)` would
+    // do — the in-process bus routes this to any active `useChannel` hook.
+    publishLocal(channels.walkinQueue(shopId), {
+      shop: shopId,
+      total_in_queue: WALKIN_TICKETS.filter((t) => t.shop === shopId).length,
+      next_token: WALKIN_TICKETS.find((t) => t.shop === shopId)?.token_number ?? null,
+      estimated_wait_minutes: ticket.estimated_wait_minutes,
+      tickets: WALKIN_TICKETS.filter((t) => t.shop === shopId),
+      reason: 'join',
+    });
     return ok({ message: ticket }, config);
+  }
+
+  if (url.endsWith('/api/method/barberbook.api.walkin.cancel')) {
+    const merged = { ...params, ...(body ?? {}) } as Record<string, unknown>;
+    const name = String(merged.name ?? '');
+    const idx = WALKIN_TICKETS.findIndex((t) => t.name === name);
+    if (idx < 0) return notFound(config, `Walk-in ticket '${name}' not found in mock`);
+    const cancelled = { ...WALKIN_TICKETS[idx], status: 'Cancelled' as const };
+    WALKIN_TICKETS[idx] = cancelled;
+    publishLocal(channels.walkinQueue(cancelled.shop), {
+      shop: cancelled.shop,
+      total_in_queue: WALKIN_TICKETS.filter(
+        (t) => t.shop === cancelled.shop && t.status !== 'Cancelled',
+      ).length,
+      next_token: null,
+      estimated_wait_minutes: 0,
+      tickets: WALKIN_TICKETS.filter((t) => t.shop === cancelled.shop),
+      reason: 'cancel',
+    });
+    return ok({ message: cancelled }, config);
   }
 
   if (url.endsWith('/api/method/barberbook.api.review.submit')) {

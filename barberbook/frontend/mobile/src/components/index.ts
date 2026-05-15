@@ -12,3 +12,6 @@ export { ShopPhoto, type ShopPhotoProps } from './ShopPhoto';
 export { ToastHost } from './ToastHost';
 export { DevHud } from './DevHud';
 export { OtpInput, type OtpInputProps, type OtpInputHandle } from './OtpInput';
+export { Confetti, type ConfettiProps } from './Confetti';
+export { EtaDonut, type EtaDonutProps } from './EtaDonut';
+export { PriceRangeSlider, type PriceRangeSliderProps } from './PriceRangeSlider';
