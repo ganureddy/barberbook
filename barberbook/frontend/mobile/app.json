@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "BarberBook",
+    "slug": "barberbook",
+    "scheme": "barberbook",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0E0E10"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "app.barberbook.client",
+      "buildNumber": "1"
+    },
+    "android": {
+      "package": "app.barberbook.client",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#D4322C"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-localization",
+      "expo-secure-store"
+    ],
+    "extra": {
+      "frappe": {
+        "siteUrlEnv": "EXPO_PUBLIC_FRAPPE_SITE_URL"
+      }
+    }
+  }
+}

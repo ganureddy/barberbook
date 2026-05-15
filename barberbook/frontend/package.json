@@ -1,0 +1,39 @@
+{
+  "name": "barberbook-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "description": "BarberBook frontend workspace (mobile, ui, api).",
+  "workspaces": {
+    "packages": [
+      "mobile",
+      "ui",
+      "api"
+    ],
+    "nohoist": [
+      "**/expo",
+      "**/expo/**",
+      "**/expo-*",
+      "**/expo-*/**",
+      "**/react-native",
+      "**/react-native/**",
+      "**/react-native-*",
+      "**/react-native-*/**",
+      "**/@react-native/**",
+      "**/@react-native-*/**",
+      "**/metro",
+      "**/metro/**",
+      "**/metro-*",
+      "**/metro-*/**"
+    ]
+  },
+  "scripts": {
+    "mobile:dev": "yarn --cwd mobile start",
+    "mobile:ios": "yarn --cwd mobile ios",
+    "mobile:android": "yarn --cwd mobile android",
+    "mobile:lint": "yarn --cwd mobile lint",
+    "mobile:typecheck": "yarn --cwd mobile typecheck"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
