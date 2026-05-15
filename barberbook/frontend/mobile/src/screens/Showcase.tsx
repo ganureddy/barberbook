@@ -2,6 +2,8 @@ import React from 'react';
 import { Pressable, ScrollView, StatusBar, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { requestOtp } from '../api/auth';
+import { useNearbyShops, useShops } from '../api/hooks';
 import {
   BarberPole,
   Button,
@@ -19,6 +21,9 @@ import {
 import { useTheme } from '../design/ThemeProvider';
 import { palette, radii, spacing, shadow } from '../design/tokens';
 import { textVariants, type TextVariant } from '../design/typography';
+import { env } from '../lib/env';
+import { toast } from '../lib/toast';
+import { useLocationStore } from '../store/useLocationStore';
 
 interface Props {
   onClose?: () => void;
@@ -60,6 +65,8 @@ export function Showcase({ onClose }: Props) {
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ApiSmokeSection />
+
         <Section title="Theme preference">
           <View style={styles.row}>
             {(['system', 'light', 'dark'] as const).map((p) => (
@@ -354,6 +361,66 @@ function Section({ title, children }: SectionProps) {
       </Text>
       {children}
     </View>
+  );
+}
+
+/**
+ * Sanity-check the API layer end-to-end without leaving Showcase. In mock
+ * mode this hits the in-process router; with `EXPO_PUBLIC_MOCK=0` and a
+ * Frappe URL set, the same buttons exercise real network calls.
+ */
+function ApiSmokeSection() {
+  const shopsQ = useShops();
+  const loc = useLocationStore((s) => s.current);
+  const nearbyQ = useNearbyShops({
+    latitude: loc.latitude,
+    longitude: loc.longitude,
+    radius_km: 5,
+    limit: 5,
+  });
+
+  return (
+    <Section title={`API smoke · ${env.mock ? 'MOCK' : 'LIVE'} · ${env.frappeUrl}`}>
+      <View style={styles.row}>
+        <Button
+          variant="red"
+          size="sm"
+          label={shopsQ.isFetching ? 'Loading…' : `useShops (${shopsQ.data?.length ?? 0})`}
+          onPress={() => shopsQ.refetch()}
+        />
+        <Button
+          variant="primary"
+          size="sm"
+          label={nearbyQ.isFetching ? 'Loading…' : `useNearbyShops (${nearbyQ.data?.length ?? 0})`}
+          onPress={() => nearbyQ.refetch()}
+        />
+        <Button
+          variant="gold"
+          size="sm"
+          label="requestOtp"
+          onPress={() => {
+            requestOtp('+91 98000 12345').catch((err) => {
+              toast.error(err?.message ?? 'OTP request failed');
+            });
+          }}
+        />
+      </View>
+
+      {shopsQ.isError && (
+        <Text variant="caption" color={palette.red} style={{ marginTop: spacing.sm }}>
+          shops error: {String(shopsQ.error)}
+        </Text>
+      )}
+      {shopsQ.data && shopsQ.data.length > 0 && (
+        <View style={{ marginTop: spacing.sm, gap: 4 }}>
+          {shopsQ.data.slice(0, 3).map((s) => (
+            <Text key={s.name} variant="mono" numberOfLines={1}>
+              {s.name} · {s.shop_name} · {s.city} · ★{s.rating.toFixed(1)}
+            </Text>
+          ))}
+        </View>
+      )}
+    </Section>
   );
 }
 

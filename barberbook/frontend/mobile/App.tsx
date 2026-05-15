@@ -1,33 +1,42 @@
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { persistOptions, queryClient } from './src/api';
+import { DevHud } from './src/components/DevHud';
 import { Text } from './src/components/Text';
+import { ToastHost } from './src/components/ToastHost';
 import { ThemeProvider, useTheme } from './src/design/ThemeProvider';
 import { palette, radii, spacing, tagline } from './src/design/tokens';
 import { useAppFonts } from './src/design/typography';
 import { Showcase } from './src/screens/Showcase';
+import { useAuthStore } from './src/store/useAuthStore';
 
 /**
- * Top-level providers, in mounting order:
+ * Provider chain (mounted in this order — order matters):
  *
- *   GestureHandlerRootView   ← required by react-native-gesture-handler
- *     SafeAreaProvider       ← provides insets to SafeAreaView in screens
- *       ThemeProvider        ← exposes useTheme() + persists preference
- *         <Splash | Showcase>
- *
- * Real navigation (react-navigation) lands in the next iteration; for now
- * the dev-only Showcase is reached via a single state toggle.
+ *   GestureHandlerRootView    ← required for any gesture handler in the tree
+ *     SafeAreaProvider        ← supplies insets to SafeAreaView in screens
+ *       PersistQueryClientProvider ← rehydrates react-query cache from MMKV
+ *         ThemeProvider       ← exposes useTheme(), drives status-bar style
+ *           <Splash | Showcase>
+ *           <ToastHost />     ← always last so it z-sits above content
+ *           <DevHud />        ← dev-only, top-right
  */
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <ThemeProvider>
-          <Root />
-        </ThemeProvider>
+        <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
+          <ThemeProvider>
+            <Root />
+            <ToastHost />
+            <DevHud />
+          </ThemeProvider>
+        </PersistQueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
@@ -38,6 +47,16 @@ type Route = 'splash' | 'showcase';
 function Root() {
   const [fontsLoaded, fontsError] = useAppFonts();
   const [route, setRoute] = useState<Route>('splash');
+  const hydrate = useAuthStore((s) => s.hydrate);
+
+  // Hydrate sid + session at first render. Idempotent — safe under
+  // strict-mode double-invocation in dev. We deliberately don't await:
+  // the splash render path doesn't depend on auth state.
+  useEffect(() => {
+    hydrate().catch(() => {
+      /* intentionally swallowed — auth hydration errors surface via toast */
+    });
+  }, [hydrate]);
 
   if (!fontsLoaded && !fontsError) {
     // Solid brand splash while fonts load. Avoids FOUC into system fallback.

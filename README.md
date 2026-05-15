@@ -54,24 +54,33 @@ make mobile-lint
 
 ### Pointing the app at your local Frappe site
 
-The mobile app reads the Frappe base URL from `EXPO_PUBLIC_FRAPPE_SITE_URL`
-(public Expo env vars are inlined into the JS bundle at build time). For a
-local bench:
+The mobile app reads its config from `EXPO_PUBLIC_*` env vars (inlined into
+the JS bundle at build time — never put secrets here). The full set lives in
+[`mobile/.env.example`](./barberbook/frontend/mobile/.env.example); the two
+that matter day-to-day:
 
 ```bash
 # from apps/barberbook/barberbook/frontend/mobile
-echo 'EXPO_PUBLIC_FRAPPE_SITE_URL=http://<your-lan-ip>:8000' > .env.local
+cp .env.example .env.local
+# then edit:
+#   EXPO_PUBLIC_FRAPPE_URL=http://<your-LAN-ip>:8000   # iOS Sim / device
+#   EXPO_PUBLIC_FRAPPE_URL=http://10.0.2.2:8000        # Android Emulator
+#   EXPO_PUBLIC_MOCK=0                                 # hit the real bench
 make -C ../../.. mobile-dev
 ```
 
-Use your machine's LAN IP (not `localhost`) so the simulator and physical
-devices on Expo Go can reach the bench. The exact API client wiring lands in
-a follow-up commit (see `frontend/api/`).
+When `EXPO_PUBLIC_MOCK=1` (the default), the app boots against in-process
+mock fixtures — useful before any DocTypes exist on the Frappe side. Flip
+it to `0` and the same code path hits `/api/method/frappe.client.*` and
+`/api/method/barberbook.api.*` over HTTPS.
+
+The DevHud badge at the top-right tells you which mode you're in (`MOCK`
+in gold, `LIVE` in red), the active role, and the last API call.
 
 ## 3. Design system
 
 The mobile app's design tokens (colors, type stack, radii, shadows) live in
-`barberbook/frontend/mobile/src/theme/tokens.ts` and are derived from the
+`barberbook/frontend/mobile/src/design/tokens.ts` and are derived from the
 BarberBook brand canvas:
 
 - Palette: red `#D4322C`, navy `#1E3A8A`, cream `#F5F1E8`, ink `#0E0E10`, gold `#C9A24C`
