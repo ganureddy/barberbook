@@ -2,11 +2,20 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useBarbersForShop } from '../../../api/hooks';
 import type { Barber } from '../../../api/types';
-import { Card, Icon, Portrait, Stars, Tag, Text } from '../../../components';
+import {
+  Card,
+  Icon,
+  ListRowSkeleton,
+  Portrait,
+  SkeletonGroup,
+  Stars,
+  Tag,
+  Text,
+} from '../../../components';
 import { useTheme } from '../../../design/ThemeProvider';
 import { palette, radii, spacing } from '../../../design/tokens';
 import type { DiscoverStackParamList } from '../../../navigation/types';
@@ -36,8 +45,10 @@ export function BarbersTab({ shopId }: Props) {
 
   if (barbersQ.isLoading && !barbersQ.data) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color={palette.red} />
+      <View style={styles.root}>
+        <SkeletonGroup count={3}>
+          <ListRowSkeleton height={96} />
+        </SkeletonGroup>
       </View>
     );
   }
@@ -149,9 +160,5 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  center: {
-    paddingVertical: spacing['3xl'],
-    alignItems: 'center',
   },
 });

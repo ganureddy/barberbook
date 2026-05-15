@@ -3,13 +3,13 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useNearbyShops } from '../../api/hooks';
-import { Icon, Text } from '../../components';
+import { Icon, ShopCardSkeleton, SkeletonGroup, Text } from '../../components';
 import { useTheme } from '../../design/ThemeProvider';
-import { palette, radii, spacing } from '../../design/tokens';
+import { radii, spacing } from '../../design/tokens';
 import type { DiscoverStackParamList } from '../../navigation/types';
 import { useLocationStore } from '../../store/useLocationStore';
 
@@ -75,11 +75,10 @@ export function DiscoveryList() {
       <FilterRow state={filters} onToggle={toggleFilter} />
 
       {shopsQ.isLoading && !shopsQ.data ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={palette.red} />
-          <Text variant="caption" color={theme.muted} style={{ marginTop: spacing.sm }}>
-            {t('discover.loading')}
-          </Text>
+        <View style={styles.skeletonHost}>
+          <SkeletonGroup count={5}>
+            <ShopCardSkeleton />
+          </SkeletonGroup>
         </View>
       ) : (
         <FlatList
@@ -146,9 +145,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing['4xl'],
   },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+  skeletonHost: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.lg,
   },
 });

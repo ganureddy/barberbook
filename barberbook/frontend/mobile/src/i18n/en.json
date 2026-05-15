@@ -203,5 +203,60 @@
   "share": {
     "subject": "Booked at {{shop}}",
     "message": "Just booked a chair at {{shop}} via BarberBook. Token {{token}} at {{when}}."
+  },
+  "loyalty": {
+    "title": "Rewards",
+    "tier_silver": "Silver",
+    "tier_gold": "Gold",
+    "tier_platinum": "Platinum",
+    "points_balance": "{{n}} points",
+    "to_next_tier": "{{n}} pts to {{next}}",
+    "history_title": "Points activity",
+    "rewards_title": "Available rewards",
+    "locked_at": "{{n}} pts"
+  },
+  "rate": {
+    "title": "How was it?",
+    "subtitle": "Your rating helps {{name}} and others on BarberBook.",
+    "stand_out": "What stood out?",
+    "free_text": "Add a note (optional)",
+    "submit": "Submit review",
+    "earned": "+{{n}} loyalty points earned",
+    "tag_quick": "Quick service",
+    "tag_skilled": "Skilled cut",
+    "tag_friendly": "Friendly",
+    "tag_clean": "Clean",
+    "tag_value": "Good value",
+    "tag_music": "Good vibes"
+  },
+  "profile": {
+    "stats_bookings": "Bookings",
+    "stats_favs": "Favorites",
+    "stats_spent": "Spent",
+    "upcoming": "Upcoming",
+    "show_qr": "Show QR",
+    "past": "Past bookings",
+    "settings": "Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "preview_notification": "Preview a notification",
+    "sign_out": "Sign out"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications yet.",
+    "action_rebook": "Rebook",
+    "action_rate": "Rate",
+    "action_directions": "Directions",
+    "preview_title": "Lock screen preview",
+    "preview_subtitle": "Here's what a push notification looks like."
+  },
+  "switcher": {
+    "language_label": "Language",
+    "theme_label": "Theme",
+    "system": "Match system",
+    "light": "Light",
+    "dark": "Dark",
+    "rtl_warning": "Arabic uses right-to-left layout. The app will restart."
   }
 }

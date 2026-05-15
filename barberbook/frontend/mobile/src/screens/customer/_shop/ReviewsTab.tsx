@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { useReviewsForShop } from '../../../api/hooks';
 import type { Review } from '../../../api/types';
-import { Card, Chip, Stars, Text } from '../../../components';
+import { Card, Chip, ListRowSkeleton, SkeletonGroup, Stars, Text } from '../../../components';
 import { useTheme } from '../../../design/ThemeProvider';
 import { palette, radii, spacing } from '../../../design/tokens';
 
@@ -44,8 +44,10 @@ export function ReviewsTab({ shopId }: Props) {
 
   if (reviewsQ.isLoading && !reviewsQ.data) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color={palette.red} />
+      <View style={styles.root}>
+        <SkeletonGroup count={3}>
+          <ListRowSkeleton height={88} />
+        </SkeletonGroup>
       </View>
     );
   }
@@ -230,9 +232,5 @@ const styles = StyleSheet.create({
     borderLeftWidth: 3,
     borderLeftColor: palette.red,
     borderRadius: radii.sm,
-  },
-  center: {
-    paddingVertical: spacing['3xl'],
-    alignItems: 'center',
   },
 });

@@ -14,6 +14,7 @@ import { DiscoveryList } from '../screens/customer/DiscoveryList';
 import { DiscoveryMap } from '../screens/customer/DiscoveryMap';
 import { FiltersSheet } from '../screens/customer/FiltersSheet';
 import { Loyalty } from '../screens/customer/Loyalty';
+import { NotificationPreview } from '../screens/customer/NotificationPreview';
 import { NotificationsList } from '../screens/customer/NotificationsList';
 import { Profile } from '../screens/customer/Profile';
 import { RateExperience } from '../screens/customer/RateExperience';
@@ -131,6 +132,11 @@ function MeStack() {
         name="NotificationsList"
         component={NotificationsList}
         options={{ title: 'Notifications' }}
+      />
+      <Me.Screen
+        name="NotificationPreview"
+        component={NotificationPreview}
+        options={{ headerShown: false, presentation: 'modal' }}
       />
     </Me.Navigator>
   );

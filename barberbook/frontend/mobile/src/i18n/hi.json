@@ -203,5 +203,60 @@
   "share": {
     "subject": "{{shop}} पर बुकिंग",
     "message": "अभी {{shop}} पर BarberBook से कुर्सी बुक की। टोकन {{token}}, समय {{when}}।"
+  },
+  "loyalty": {
+    "title": "रिवॉर्ड्स",
+    "tier_silver": "सिल्वर",
+    "tier_gold": "गोल्ड",
+    "tier_platinum": "प्लैटिनम",
+    "points_balance": "{{n}} पॉइंट",
+    "to_next_tier": "{{next}} तक {{n}} पॉइंट और",
+    "history_title": "पॉइंट गतिविधि",
+    "rewards_title": "उपलब्ध इनाम",
+    "locked_at": "{{n}} पॉइंट"
+  },
+  "rate": {
+    "title": "कैसा रहा?",
+    "subtitle": "आपकी रेटिंग {{name}} और BarberBook के अन्य लोगों की मदद करती है।",
+    "stand_out": "क्या ख़ास रहा?",
+    "free_text": "एक नोट लिखें (वैकल्पिक)",
+    "submit": "रिव्यू भेजें",
+    "earned": "+{{n}} लॉयल्टी पॉइंट",
+    "tag_quick": "तेज़ सर्विस",
+    "tag_skilled": "बेहतरीन कट",
+    "tag_friendly": "दोस्ताना",
+    "tag_clean": "साफ़",
+    "tag_value": "अच्छी क़ीमत",
+    "tag_music": "अच्छा माहौल"
+  },
+  "profile": {
+    "stats_bookings": "बुकिंग",
+    "stats_favs": "पसंदीदा",
+    "stats_spent": "ख़र्च",
+    "upcoming": "आगामी",
+    "show_qr": "QR दिखाएं",
+    "past": "पिछली बुकिंग",
+    "settings": "सेटिंग्स",
+    "language": "भाषा",
+    "theme": "थीम",
+    "preview_notification": "नोटिफ़िकेशन देखें",
+    "sign_out": "साइन आउट"
+  },
+  "notifications": {
+    "title": "नोटिफ़िकेशन",
+    "empty": "अभी कोई नोटिफ़िकेशन नहीं।",
+    "action_rebook": "फिर बुक करें",
+    "action_rate": "रेट करें",
+    "action_directions": "रास्ता",
+    "preview_title": "लॉक स्क्रीन प्रीव्यू",
+    "preview_subtitle": "नोटिफ़िकेशन ऐसा दिखेगा।"
+  },
+  "switcher": {
+    "language_label": "भाषा",
+    "theme_label": "थीम",
+    "system": "सिस्टम जैसा",
+    "light": "लाइट",
+    "dark": "डार्क",
+    "rtl_warning": "अरबी दाएं से बाएं चलती है। ऐप दोबारा चालू होगा।"
   }
 }

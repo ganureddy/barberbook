@@ -73,6 +73,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
             screens: {
               Profile: 'me',
               NotificationsList: 'me/notifications',
+              NotificationPreview: 'me/notifications/preview',
             },
           },
         },

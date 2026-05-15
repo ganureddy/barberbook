@@ -1,10 +1,10 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { useServicesForShop } from '../../../api/hooks';
 import type { Service } from '../../../api/types';
-import { Card, Icon, Text } from '../../../components';
+import { Card, Icon, ListRowSkeleton, SkeletonGroup, Text } from '../../../components';
 import { useTheme } from '../../../design/ThemeProvider';
 import { palette, radii, spacing } from '../../../design/tokens';
 import { formatMoney } from '../../../lib/booking';
@@ -33,8 +33,10 @@ export function MenuTab({ shopId }: Props) {
 
   if (servicesQ.isLoading && !servicesQ.data) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color={palette.red} />
+      <View style={styles.root}>
+        <SkeletonGroup count={4}>
+          <ListRowSkeleton height={80} />
+        </SkeletonGroup>
       </View>
     );
   }
@@ -158,9 +160,5 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     minWidth: 64,
     justifyContent: 'center',
-  },
-  center: {
-    paddingVertical: spacing['3xl'],
-    alignItems: 'center',
   },
 });

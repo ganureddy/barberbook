@@ -36,3 +36,9 @@ export {
   type RedeemPayload,
   type RedeemResult,
 } from './loyaltyAccount';
+export {
+  registerDevice,
+  unregisterDevice,
+  type RegisterDevicePayload,
+  type RegisterDeviceResult,
+} from './push';

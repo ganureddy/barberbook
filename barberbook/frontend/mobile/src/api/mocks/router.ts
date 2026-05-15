@@ -370,6 +370,21 @@ export function routeMock(config: AxiosRequestConfig): AxiosResponse | null {
     return ok({ message: cancelled }, config);
   }
 
+  if (
+    url.endsWith('/api/method/barberbook.api.push.register_device') ||
+    url.endsWith('/api/method/barberbook.api.push.unregister_device')
+  ) {
+    return ok(
+      {
+        message: {
+          token_id: `mock-token-${Date.now()}`,
+          registered_at: new Date().toISOString(),
+        },
+      },
+      config,
+    );
+  }
+
   if (url.endsWith('/api/method/barberbook.api.review.submit')) {
     const merged = { ...params, ...(body ?? {}) } as Record<string, unknown>;
     const review = {

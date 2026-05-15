@@ -189,7 +189,20 @@ export function useCreateBooking(): UseMutationResult<Booking, Error, CreateBook
   const qc = useQueryClient();
   return useMutation({
     mutationFn: createBooking,
-    onSuccess: () => qc.invalidateQueries({ queryKey: qk.bookings.all }),
+    onSuccess: (booking) => {
+      // Fire-and-forget local reminders. The push module owns idempotency
+      // (cancels prior reminders for the same bookingId before scheduling).
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const push = require('../../lib/push') as typeof import('../../lib/push');
+      push
+        .scheduleBookingReminders({
+          bookingId: booking.name,
+          shopName: booking.shop,
+          scheduledAt: booking.scheduled_at,
+        })
+        .catch(() => {});
+      qc.invalidateQueries({ queryKey: qk.bookings.all }).catch(() => {});
+    },
   });
 }
 

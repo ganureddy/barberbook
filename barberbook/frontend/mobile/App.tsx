@@ -19,6 +19,7 @@ import { ThemeProvider, useTheme } from './src/design/ThemeProvider';
 import { palette } from './src/design/tokens';
 import { useAppFonts } from './src/design/typography';
 import { initI18n } from './src/i18n';
+import { attachPushListeners, registerPush } from './src/lib/push';
 import { RootNavigator, linking, navigationRef } from './src/navigation';
 import { useAuthStore } from './src/store/useAuthStore';
 import { useBookingDraftStore } from './src/store/useBookingDraftStore';
@@ -68,6 +69,15 @@ function Root() {
     });
     hydrateDraft();
   }, [hydrate, hydrateDraft]);
+
+  // Push notifications: register token + listen for taps. Both are
+  // best-effort — the registerPush helper short-circuits on simulators
+  // and Expo Go without entitlements.
+  useEffect(() => {
+    registerPush().catch(() => {});
+    const detach = attachPushListeners();
+    return detach;
+  }, []);
 
   // React Navigation theme — wires the stock dark/light split into our
   // palette so headers and the tab bar honour the active mode.

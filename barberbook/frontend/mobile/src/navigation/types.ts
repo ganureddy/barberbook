@@ -81,6 +81,7 @@ export type RewardsStackParamList = {
 export type MeStackParamList = {
   Profile: undefined;
   NotificationsList: undefined;
+  NotificationPreview: undefined;
 };
 
 // ─── Owner ──────────────────────────────────────────────────────────────────

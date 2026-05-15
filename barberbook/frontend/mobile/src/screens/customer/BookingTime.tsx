@@ -4,11 +4,11 @@ import * as Haptics from 'expo-haptics';
 import { StatusBar } from 'expo-status-bar';
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAvailability } from '../../api/hooks';
-import { Button, Icon, Text } from '../../components';
+import { Button, Icon, ListRowSkeleton, Text } from '../../components';
 import { useTheme } from '../../design/ThemeProvider';
 import { palette, radii, spacing } from '../../design/tokens';
 import type { DiscoverStackParamList } from '../../navigation/types';
@@ -138,11 +138,12 @@ export function BookingTime() {
 
         {/* Time grid */}
         {slotsQ.isLoading && !slotsQ.data ? (
-          <View style={styles.loading}>
-            <ActivityIndicator color={palette.red} />
-            <Text variant="caption" color={theme.muted}>
-              {t('booking.loading_slots')}
-            </Text>
+          <View style={[styles.timeGrid, styles.skeletonGrid]}>
+            {Array.from({ length: 12 }, (_, i) => (
+              <View key={i} style={styles.slotCellSkeleton}>
+                <ListRowSkeleton height={48} />
+              </View>
+            ))}
           </View>
         ) : slots.length === 0 ? (
           <View style={styles.loading}>
@@ -240,6 +241,13 @@ const styles = StyleSheet.create({
     paddingVertical: spacing['3xl'],
     alignItems: 'center',
     gap: spacing.sm,
+  },
+  skeletonGrid: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.lg,
+  },
+  slotCellSkeleton: {
+    width: '23.5%',
   },
   timeGrid: {
     paddingHorizontal: spacing.xl,
