@@ -2,8 +2,8 @@ import React from 'react';
 import { Pressable, ScrollView, StatusBar, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { requestOtp } from '../api/auth';
-import { useNearbyShops, useShops } from '../api/hooks';
+import { requestOtp } from '../../api/auth';
+import { useNearbyShops, useShops } from '../../api/hooks';
 import {
   BarberPole,
   Button,
@@ -17,13 +17,13 @@ import {
   Stars,
   Tag,
   Text,
-} from '../components';
-import { useTheme } from '../design/ThemeProvider';
-import { palette, radii, spacing, shadow } from '../design/tokens';
-import { textVariants, type TextVariant } from '../design/typography';
-import { env } from '../lib/env';
-import { toast } from '../lib/toast';
-import { useLocationStore } from '../store/useLocationStore';
+} from '../../components';
+import { useTheme } from '../../design/ThemeProvider';
+import { palette, radii, spacing, shadow } from '../../design/tokens';
+import { textVariants, type TextVariant } from '../../design/typography';
+import { env } from '../../lib/env';
+import { toast } from '../../lib/toast';
+import { useLocationStore } from '../../store/useLocationStore';
 
 interface Props {
   onClose?: () => void;

@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDevEventsStore } from '../api/devEvents';
 import { palette, radii, spacing } from '../design/tokens';
 import { env } from '../lib/env';
+import { navigate } from '../navigation/ref';
 import { useAuthStore } from '../store/useAuthStore';
 import { useLocationStore } from '../store/useLocationStore';
 
@@ -69,6 +70,33 @@ export function DevHud() {
             <Row k="sid" v={auth.sid ? `${auth.sid.slice(0, 6)}…${auth.sid.slice(-4)}` : '–'} />
             <Row k="lat,lng" v={`${loc.latitude.toFixed(3)}, ${loc.longitude.toFixed(3)}`} />
             <Row k="city" v={loc.city ?? '–'} />
+            <View style={styles.divider} />
+            <View style={styles.actions}>
+              <Pressable
+                onPress={() => {
+                  setExpanded(false);
+                  navigate('DevRoleSwitcher');
+                }}
+                style={styles.action}
+                accessibilityRole="button"
+              >
+                <Text variant="labelSm" color={palette.gold}>
+                  ↺ ROLE SWITCHER
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  setExpanded(false);
+                  navigate('DevShowcase');
+                }}
+                style={styles.action}
+                accessibilityRole="button"
+              >
+                <Text variant="labelSm" color={palette.gold}>
+                  ✦ SHOWCASE
+                </Text>
+              </Pressable>
+            </View>
             <View style={styles.divider} />
             <Text variant="labelSm" color={palette.gold}>
               LAST API CALLS
@@ -168,5 +196,17 @@ const styles = StyleSheet.create({
     height: StyleSheet.hairlineWidth * 2,
     backgroundColor: 'rgba(245,241,232,0.15)',
     marginVertical: spacing.sm,
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  action: {
+    flex: 1,
+    backgroundColor: 'rgba(201,162,76,0.15)',
+    borderRadius: radii.sm,
+    paddingVertical: spacing.xs + 2,
+    paddingHorizontal: spacing.sm,
+    alignItems: 'center',
   },
 });

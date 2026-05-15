@@ -28,6 +28,14 @@ interface AuthStore {
   setSession: (user: SessionUser, sid: string) => void;
   setActiveRole: (role: UserRole) => void;
   logout: () => Promise<void>;
+
+  /**
+   * DEV-ONLY: install a fake authenticated session with all three roles
+   * available, then pin the active role. Used by the Role Switcher to jump
+   * between role flows during scaffolding work without going through OTP.
+   * No-op outside of `__DEV__`.
+   */
+  setDevRole: (role: UserRole) => void;
 }
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
@@ -94,6 +102,27 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       user: null,
       sid: null,
       activeRole: null,
+    });
+  },
+
+  setDevRole(role) {
+    if (!__DEV__) return;
+    const devUser: SessionUser = {
+      email: 'dev@barberbook.local',
+      full_name: 'Dev User',
+      phone: '+91 90000 00000',
+      avatar_seed: 'dev-user',
+      roles: ['Customer', 'Owner', 'Staff', 'Admin'],
+      active_role: role,
+      sid: 'dev-sid-local',
+    };
+    saveActiveRole(role);
+    setSessionId(devUser.sid ?? null);
+    set({
+      status: 'authenticated',
+      user: devUser,
+      sid: devUser.sid ?? null,
+      activeRole: role,
     });
   },
 }));
