@@ -25,3 +25,12 @@ export {
 } from './Skeleton';
 export { LanguageSwitcher } from './LanguageSwitcher';
 export { ThemeSwitcher } from './ThemeSwitcher';
+export { BarChart, type BarChartProps, type BarDatum } from './BarChart';
+export {
+  KpiTile,
+  StatusPill,
+  DenseHeader,
+  type KpiTileProps,
+  type StatusPillProps,
+  type DenseHeaderProps,
+} from './owner';

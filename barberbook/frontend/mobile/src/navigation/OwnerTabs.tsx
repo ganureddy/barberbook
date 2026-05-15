@@ -50,7 +50,12 @@ function RosterStack() {
       <Roster.Screen
         name="OwnerRosterConflict"
         component={OwnerRosterConflict}
-        options={{ title: 'Conflicts' }}
+        options={{
+          presentation: 'transparentModal',
+          headerShown: false,
+          animation: 'fade',
+          contentStyle: { backgroundColor: 'transparent' },
+        }}
       />
       <Roster.Screen name="OwnerSeats" component={OwnerSeats} options={{ title: 'Seats' }} />
     </Roster.Navigator>
@@ -65,7 +70,12 @@ function MenuStack() {
       <Menu.Screen
         name="OwnerAddService"
         component={OwnerAddService}
-        options={{ presentation: 'modal', title: 'Service' }}
+        options={{
+          presentation: 'transparentModal',
+          headerShown: false,
+          animation: 'fade',
+          contentStyle: { backgroundColor: 'transparent' },
+        }}
       />
     </Menu.Navigator>
   );
