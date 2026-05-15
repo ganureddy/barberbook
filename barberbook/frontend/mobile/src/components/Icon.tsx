@@ -1,4 +1,5 @@
 import React from 'react';
+import { I18nManager } from 'react-native';
 import Svg, { Circle, G, Line, Path, Polyline, Rect, type SvgProps } from 'react-native-svg';
 
 import { useTheme } from '../design/ThemeProvider';
@@ -230,3 +231,23 @@ const ICONS: Record<IconName, React.FC<GlyphProps>> = {
 };
 
 export const ICON_NAMES = Object.keys(ICONS) as readonly IconName[];
+
+/**
+ * Back-arrow icon that auto-mirrors in RTL layouts. Use everywhere a
+ * "go back" affordance is rendered — the underlying chevron flips to
+ * `chevronRight` when `I18nManager.isRTL`.
+ *
+ * Prefer this over `<Icon name="chevronLeft" />` for navigational
+ * affordances; reserve the raw `Icon` for explicitly-directional glyphs
+ * (e.g. "open inspector right pane").
+ */
+export function BackIcon({ size = 22, color, ...rest }: Omit<IconProps, 'name'>) {
+  return (
+    <Icon
+      {...rest}
+      size={size}
+      color={color}
+      name={I18nManager.isRTL ? 'chevronRight' : 'chevronLeft'}
+    />
+  );
+}

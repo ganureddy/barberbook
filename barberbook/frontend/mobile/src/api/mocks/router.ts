@@ -527,6 +527,261 @@ export function routeMock(config: AxiosRequestConfig): AxiosResponse | null {
     );
   }
 
+  // ─── Staff endpoints ───────────────────────────────────────────────
+  if (url.endsWith('/api/method/barberbook.api.staff.schedule')) {
+    const merged = { ...params, ...(body ?? {}) } as Record<string, unknown>;
+    const barberId = String(merged.barber ?? 'BB-BAR-2001');
+    const dateStr = String(merged.date ?? new Date().toISOString().slice(0, 10));
+    // Second appointment is the one currently being served — see `in_chair`.
+    const at = (h: number, m: number) => {
+      const d = new Date(`${dateStr}T00:00:00`);
+      d.setHours(h, m, 0, 0);
+      return d.toISOString().slice(0, 19);
+    };
+    const appointments = [
+      {
+        name: 'STF-1',
+        customer_name: 'Aarav Mehta',
+        customer_id: 'cust-aarav',
+        service_summary: "Men's Haircut",
+        scheduled_at: at(9, 30),
+        duration_minutes: 30,
+        status: 'Completed' as const,
+        total_amount: 350,
+        currency: 'INR',
+      },
+      {
+        name: 'STF-2',
+        customer_name: 'Priya Iyer',
+        customer_id: 'cust-priya',
+        service_summary: 'Skin Fade',
+        scheduled_at: at(10, 30),
+        duration_minutes: 45,
+        status: 'InService' as const,
+        total_amount: 800,
+        currency: 'INR',
+        in_chair: true,
+      },
+      {
+        name: 'STF-3',
+        customer_name: 'Imran K.',
+        customer_id: 'cust-imran',
+        service_summary: 'Combo · Beard',
+        scheduled_at: at(12, 0),
+        duration_minutes: 50,
+        status: 'Confirmed' as const,
+        total_amount: 500,
+        currency: 'INR',
+      },
+      {
+        name: 'STF-4',
+        customer_name: 'Sara A.',
+        customer_id: 'cust-sara',
+        service_summary: "Men's Haircut",
+        scheduled_at: at(14, 30),
+        duration_minutes: 30,
+        status: 'Confirmed' as const,
+        total_amount: 350,
+        currency: 'INR',
+      },
+      {
+        name: 'STF-5',
+        customer_name: 'Devansh',
+        customer_id: 'cust-dev',
+        service_summary: 'Beard Trim',
+        scheduled_at: at(16, 0),
+        duration_minutes: 20,
+        status: 'Confirmed' as const,
+        total_amount: 200,
+        currency: 'INR',
+      },
+    ];
+    const billed = appointments
+      .filter((a) => a.status === 'Completed' || a.status === 'InService')
+      .reduce((s, a) => s + a.duration_minutes, 0);
+    return ok(
+      {
+        message: {
+          barber: barberId,
+          date: dateStr,
+          total_bookings: appointments.length,
+          billed_minutes: billed,
+          tips_today: 420,
+          currency: 'INR',
+          appointments,
+        },
+      },
+      config,
+    );
+  }
+
+  if (url.endsWith('/api/method/barberbook.api.staff.in_service')) {
+    const merged = { ...params, ...(body ?? {}) } as Record<string, unknown>;
+    const barberId = String(merged.barber ?? 'BB-BAR-2001');
+    const startedAt = new Date(Date.now() - 18 * 60 * 1000).toISOString().slice(0, 19);
+    return ok(
+      {
+        message: {
+          booking: {
+            ...baseAuditMock(),
+            doctype: 'BB Booking',
+            name: 'STF-2',
+            customer: 'cust-priya',
+            shop: 'BB-SHOP-00001',
+            barber: barberId,
+            scheduled_at: startedAt,
+            duration_minutes: 45,
+            services: [{ service: 'BB-SVC-1101', duration_minutes: 45, price: 800 }],
+            status: 'InService',
+            total_amount: 800,
+            currency: 'INR',
+            payment_status: 'Pending',
+            token_code: 'BB-IN-007',
+          },
+          customer_name: 'Priya Iyer',
+          customer_id: 'cust-priya',
+          notes_from_last_visit:
+            'Likes a tight skin fade, keeps top length ~3 inches. Allergic to scented gels.',
+          started_at: startedAt,
+        },
+      },
+      config,
+    );
+  }
+
+  if (url.endsWith('/api/method/barberbook.api.staff.complete')) {
+    return ok(
+      {
+        message: {
+          ...baseAuditMock(),
+          doctype: 'BB Booking',
+          name: 'STF-2',
+          status: 'Completed',
+          total_amount: 800,
+          currency: 'INR',
+        },
+      },
+      config,
+    );
+  }
+
+  if (url.endsWith('/api/method/barberbook.api.staff.customer')) {
+    const merged = { ...params, ...(body ?? {}) } as Record<string, unknown>;
+    const customerId = String(merged.customer_id ?? 'cust-priya');
+    return ok(
+      {
+        message: {
+          customer_id: customerId,
+          full_name: 'Priya Iyer',
+          avatar_seed: 'priya-iyer',
+          phone: '+91 98000 31415',
+          preferences: {
+            hair: 'Tight skin fade · top ~3"',
+            beard: 'Trim only, square edge',
+            allergies: 'Scented gels',
+            music: 'Old-school hip-hop',
+            notes: 'Always early. Tips well after a clean fade.',
+          },
+          stats: {
+            visits_with_you: 9,
+            total_spent: 6400,
+            currency: 'INR',
+            avg_rating: 4.9,
+          },
+          past_visits: [
+            {
+              name: 'BB-BKG-7001',
+              scheduled_at: '2026-04-22T17:00:00',
+              service_summary: 'Skin Fade',
+              rating: 5,
+              total_amount: 800,
+              currency: 'INR',
+            },
+            {
+              name: 'BB-BKG-6800',
+              scheduled_at: '2026-03-18T18:30:00',
+              service_summary: 'Combo',
+              rating: 5,
+              total_amount: 500,
+              currency: 'INR',
+            },
+            {
+              name: 'BB-BKG-6720',
+              scheduled_at: '2026-02-20T11:00:00',
+              service_summary: 'Skin Fade',
+              rating: 5,
+              total_amount: 800,
+              currency: 'INR',
+            },
+            {
+              name: 'BB-BKG-6602',
+              scheduled_at: '2026-01-23T16:00:00',
+              service_summary: "Men's Haircut",
+              rating: 4,
+              total_amount: 350,
+              currency: 'INR',
+            },
+          ],
+        },
+      },
+      config,
+    );
+  }
+
+  if (url.endsWith('/api/method/barberbook.api.staff.earnings')) {
+    const today = new Date();
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
+      .toISOString()
+      .slice(0, 10);
+    return ok(
+      {
+        message: {
+          barber: String(params.barber ?? 'BB-BAR-2001'),
+          month_start: monthStart,
+          total_amount: 84_200,
+          currency: 'INR',
+          cuts: 142,
+          avg_rating: 4.9,
+          repeat_rate: 0.62,
+          no_shows: 3,
+          recent_tips: [
+            {
+              name: 'TIP-1',
+              customer_name: 'Priya Iyer',
+              amount: 100,
+              posted_at: new Date(today.getTime() - 2 * 60 * 60 * 1000).toISOString(),
+              message: 'Sharpest fade in town. Thank you!',
+              rating: 5,
+            },
+            {
+              name: 'TIP-2',
+              customer_name: 'Aarav Mehta',
+              amount: 50,
+              posted_at: new Date(today.getTime() - 5 * 60 * 60 * 1000).toISOString(),
+              rating: 5,
+            },
+            {
+              name: 'TIP-3',
+              customer_name: null,
+              amount: 200,
+              posted_at: new Date(today.getTime() - 26 * 60 * 60 * 1000).toISOString(),
+              message: 'My son loved it. ✂️',
+              rating: 5,
+            },
+            {
+              name: 'TIP-4',
+              customer_name: 'Devansh',
+              amount: 30,
+              posted_at: new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+              rating: 4,
+            },
+          ],
+        },
+      },
+      config,
+    );
+  }
+
   if (url.endsWith('/api/method/barberbook.api.review.draft_response')) {
     const merged = { ...params, ...(body ?? {}) } as Record<string, unknown>;
     const tone = (merged.tone as string | undefined) ?? 'neutral';

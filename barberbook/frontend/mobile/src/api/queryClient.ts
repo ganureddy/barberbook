@@ -16,6 +16,7 @@ import { QueryClient } from '@tanstack/react-query';
 import { type Persister } from '@tanstack/react-query-persist-client';
 
 import { kv } from '../design/storage';
+import { dehydrateFilters } from '../lib/offline';
 
 const FIVE_MIN = 5 * 60 * 1000;
 const ONE_HOUR = 60 * 60 * 1000;
@@ -30,9 +31,16 @@ export const queryClient = new QueryClient({
       retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
       refetchOnWindowFocus: false,
       refetchOnReconnect: true,
+      // `offlineFirst` lets react-query serve persisted data when the
+      // device is offline. Reads continue to work; writes are paused
+      // by `onlineManager` (see `lib/offline.attachOfflineBridge`).
+      networkMode: 'offlineFirst',
     },
     mutations: {
       retry: 1,
+      // Same offline-first semantics — mutations queue while offline
+      // and auto-resume on reconnect with their idempotency key intact.
+      networkMode: 'offlineFirst',
     },
   },
 });
@@ -62,4 +70,7 @@ export const persistOptions = {
   persister: queryPersister,
   maxAge: ONE_HOUR * 24, // discard cache older than a day on rehydrate
   buster: 'v1',
+  // Persist pending mutations so they replay on cold start with their
+  // idempotency key intact (offline → power-off → power-on flow).
+  dehydrateOptions: dehydrateFilters,
 } as const;

@@ -26,7 +26,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Svg, { Path } from 'react-native-svg';
 
 import { useBooking, useSubmitReview } from '../../api/hooks';
-import { Button, Card, Chip, Icon, Portrait, Text } from '../../components';
+import { BackIcon, Button, Card, Chip, Icon, Portrait, Text } from '../../components';
 import { useTheme } from '../../design/ThemeProvider';
 import { palette, radii, shadow, spacing } from '../../design/tokens';
 import { fontFamilies } from '../../design/typography';
@@ -115,7 +115,7 @@ export function RateExperience() {
               style={styles.iconBtn}
               accessibilityLabel={t('common.back')}
             >
-              <Icon name="chevronLeft" size={22} />
+              <BackIcon size={22} />
             </Pressable>
             <Text variant="labelSm" color={palette.red}>
               FEEDBACK

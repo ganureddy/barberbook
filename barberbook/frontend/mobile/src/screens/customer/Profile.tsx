@@ -9,6 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMyBookings } from '../../api/hooks';
 import {
   Card,
+  DensitySwitcher,
   Icon,
   LanguageSwitcher,
   ListRowSkeleton,
@@ -186,6 +187,7 @@ export function Profile() {
           <View style={{ marginTop: spacing.md, gap: spacing.md }}>
             <LanguageSwitcher />
             <ThemeSwitcher />
+            <DensitySwitcher />
           </View>
 
           <View style={{ marginTop: spacing.md }}>

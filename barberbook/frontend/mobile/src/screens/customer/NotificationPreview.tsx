@@ -13,7 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Button, Card, Icon, Text } from '../../components';
+import { BackIcon, Button, Card, Icon, Text } from '../../components';
 import { palette, radii, shadow, spacing } from '../../design/tokens';
 import { presentLocalPreview } from '../../lib/push';
 import { toast } from '../../lib/toast';
@@ -64,7 +64,7 @@ export function NotificationPreview() {
             style={styles.iconBtn}
             accessibilityLabel={t('common.back')}
           >
-            <Icon name="chevronLeft" size={20} color={palette.cream} />
+            <BackIcon size={20} color={palette.cream} />
           </Pressable>
           <View style={{ flex: 1 }}>
             <Text variant="labelSm" color={palette.gold}>

@@ -56,3 +56,15 @@ export {
   type DraftResponseInput,
   type DraftResponseResult,
 } from './owner';
+export {
+  getStaffSchedule,
+  getStaffInService,
+  completeStaffService,
+  getStaffCustomerProfile,
+  getStaffEarnings,
+  type StaffSchedule,
+  type StaffScheduleEntry,
+  type StaffInServiceState,
+  type StaffCustomerProfile,
+  type StaffEarnings,
+} from './staff';

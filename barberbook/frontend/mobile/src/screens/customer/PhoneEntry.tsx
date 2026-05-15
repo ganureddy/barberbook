@@ -16,7 +16,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-na
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { requestOtp } from '../../api/auth';
-import { Button, Divider, Icon, Text } from '../../components';
+import { BackIcon, Button, Divider, Icon, Text } from '../../components';
 import { useTheme } from '../../design/ThemeProvider';
 import { palette, radii, shadow, spacing } from '../../design/tokens';
 import { fontFamilies } from '../../design/typography';
@@ -81,7 +81,7 @@ export function PhoneEntry() {
             accessibilityRole="button"
             accessibilityLabel={t('common.back')}
           >
-            <Icon name="chevronLeft" size={22} />
+            <BackIcon size={22} />
           </Pressable>
 
           <View>

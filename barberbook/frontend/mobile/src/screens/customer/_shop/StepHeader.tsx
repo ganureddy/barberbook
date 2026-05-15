@@ -3,7 +3,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { Icon, Text } from '../../../components';
+import { BackIcon, Text } from '../../../components';
 import { useTheme } from '../../../design/ThemeProvider';
 import { palette, spacing } from '../../../design/tokens';
 
@@ -37,7 +37,7 @@ export function StepHeader({ step, title }: Props) {
         accessibilityRole="button"
         accessibilityLabel={t('common.back')}
       >
-        <Icon name="chevronLeft" size={22} />
+        <BackIcon size={22} />
       </Pressable>
 
       <View style={{ flex: 1, gap: 2 }}>

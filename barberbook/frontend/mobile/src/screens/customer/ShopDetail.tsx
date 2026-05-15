@@ -15,7 +15,7 @@ import Animated, {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useShop } from '../../api/hooks';
-import { Button, Icon, ShopPhoto, Stars, Tag, Text } from '../../components';
+import { BackIcon, Button, Icon, ShopPhoto, Stars, Tag, Text } from '../../components';
 import { useTheme } from '../../design/ThemeProvider';
 import { palette, radii, shadow, spacing } from '../../design/tokens';
 import type { DiscoverStackParamList } from '../../navigation/types';
@@ -111,7 +111,7 @@ export function ShopDetail() {
               style={styles.iconBtnDark}
               accessibilityLabel={t('common.back')}
             >
-              <Icon name="chevronLeft" size={20} color={palette.cream} />
+              <BackIcon size={20} color={palette.cream} />
             </Pressable>
 
             <View style={{ flex: 1 }} />

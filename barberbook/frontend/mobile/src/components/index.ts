@@ -5,7 +5,7 @@ export { Chip, type ChipProps } from './Chip';
 export { Stars, type StarsProps } from './Stars';
 export { Card, type CardProps } from './Card';
 export { Divider, type DividerProps } from './Divider';
-export { Icon, ICON_NAMES, type IconName, type IconProps } from './Icon';
+export { Icon, BackIcon, ICON_NAMES, type IconName, type IconProps } from './Icon';
 export { Portrait, type PortraitProps } from './Portrait';
 export { BarberPole, type BarberPoleProps } from './BarberPole';
 export { ShopPhoto, type ShopPhotoProps } from './ShopPhoto';
@@ -25,6 +25,7 @@ export {
 } from './Skeleton';
 export { LanguageSwitcher } from './LanguageSwitcher';
 export { ThemeSwitcher } from './ThemeSwitcher';
+export { DensitySwitcher } from './DensitySwitcher';
 export { BarChart, type BarChartProps, type BarDatum } from './BarChart';
 export {
   KpiTile,

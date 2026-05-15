@@ -19,7 +19,7 @@ import { useCancelWalkin, useJoinWalkin, useWalkinSnapshot } from '../../api/hoo
 import { channels, useChannel } from '../../api/realtime';
 import type { WalkinSnapshot } from '../../api/resources';
 import type { WalkinTicket } from '../../api/types';
-import { Button, Card, EtaDonut, Icon, Tag, Text } from '../../components';
+import { BackIcon, Button, Card, EtaDonut, Tag, Text } from '../../components';
 import { palette, radii, shadow, spacing } from '../../design/tokens';
 import { fontFamilies } from '../../design/typography';
 import { toast } from '../../lib/toast';
@@ -139,7 +139,7 @@ export function Walkin() {
             accessibilityRole="button"
             accessibilityLabel={t('common.back')}
           >
-            <Icon name="chevronLeft" size={20} color={palette.cream} />
+            <BackIcon size={20} color={palette.cream} />
           </Pressable>
           <View style={{ flex: 1 }}>
             <Text variant="labelSm" color={palette.gold}>

@@ -21,7 +21,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { useNearbyShops } from '../../api/hooks';
 import type { NearbyShop } from '../../api/resources';
-import { Icon, Text } from '../../components';
+import { BackIcon, Icon, Text } from '../../components';
 import { useTheme } from '../../design/ThemeProvider';
 import { palette, radii, shadow, spacing } from '../../design/tokens';
 import type { DiscoverStackParamList } from '../../navigation/types';
@@ -150,7 +150,7 @@ export function DiscoveryMap() {
             accessibilityRole="button"
             accessibilityLabel={t('common.back')}
           >
-            <Icon name="chevronLeft" size={20} color={theme.text} />
+            <BackIcon size={20} color={theme.text} />
           </Pressable>
 
           <View

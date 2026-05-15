@@ -13,7 +13,7 @@ import type { BookingStatus } from '../api/types';
 import { useTheme } from '../design/ThemeProvider';
 import { palette, radii, spacing } from '../design/tokens';
 
-import { Icon, type IconName } from './Icon';
+import { BackIcon, Icon, type IconName } from './Icon';
 import { Text } from './Text';
 
 // ─── KPI tile ──────────────────────────────────────────────────────────────
@@ -140,8 +140,14 @@ export function DenseHeader({
     >
       <View style={styles.headerLeft}>
         {onBack && (
-          <Pressable onPress={onBack} hitSlop={20} style={styles.backBtn}>
-            <Icon name="chevronLeft" size={22} />
+          <Pressable
+            onPress={onBack}
+            hitSlop={20}
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+            style={styles.backBtn}
+          >
+            <BackIcon size={22} />
           </Pressable>
         )}
         <View style={{ flex: 1 }}>

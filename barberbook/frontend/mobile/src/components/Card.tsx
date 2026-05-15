@@ -28,7 +28,12 @@ export function Card({
   children,
   ...rest
 }: CardProps) {
-  const { theme } = useTheme();
+  const { theme, densityScale } = useTheme();
+  // Compact density shaves ~25% off the default padding. Horizontal
+  // padding stays close to comfortable to keep text legible; vertical
+  // padding takes the bulk of the cut.
+  const padV = padded ? Math.round(16 * densityScale) : 0;
+  const padH = padded ? Math.round(16 * Math.max(0.85, densityScale)) : 0;
   return (
     <View
       {...rest}
@@ -39,7 +44,8 @@ export function Card({
           borderColor: bordered ? theme.line : 'transparent',
           borderWidth: bordered ? StyleSheet.hairlineWidth * 2 : 0,
           borderRadius: radii[radius],
-          padding: padded ? 16 : 0,
+          paddingVertical: padV,
+          paddingHorizontal: padH,
         },
         shadowPresets[shadow],
         style,

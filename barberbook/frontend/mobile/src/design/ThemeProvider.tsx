@@ -13,11 +13,20 @@ import {
 } from './tokens';
 
 const STORAGE_KEY = 'barberbook.themePreference.v1';
+const DENSITY_KEY = 'barberbook.density.v1';
 
 /**
  * Possible user preferences. `system` follows OS. `light`/`dark` pin.
  */
 export type ThemePreference = 'system' | 'light' | 'dark';
+
+/**
+ * Layout density. `comfortable` is the canvas default; `compact`
+ * reduces vertical padding by ~25% (driven by `densityScale`) so
+ * data-dense screens (Owner timeline, walk-in queue, roster) fit more
+ * rows on smaller phones without breaking the visual rhythm.
+ */
+export type Density = 'comfortable' | 'compact';
 
 interface ThemeContextValue {
   /** The resolved tokens for the currently active mode. */
@@ -29,6 +38,11 @@ interface ThemeContextValue {
   setPreference: (next: ThemePreference) => void;
   /** Convenience: flip between light / dark, ignoring 'system'. */
   toggle: () => void;
+  /** Density preference: comfortable / compact. */
+  density: Density;
+  setDensity: (next: Density) => void;
+  /** 1.0 for comfortable, 0.75 for compact. Multiply vertical paddings by this. */
+  densityScale: number;
   /** Static brand tokens, exposed here for ergonomic consumption. */
   palette: typeof palette;
   radii: typeof radii;
@@ -44,6 +58,12 @@ function readStoredPreference(): ThemePreference {
   return 'system';
 }
 
+function readStoredDensity(): Density {
+  const raw = kv.getString(DENSITY_KEY);
+  if (raw === 'comfortable' || raw === 'compact') return raw;
+  return 'comfortable';
+}
+
 interface ThemeProviderProps {
   children: React.ReactNode;
   /** Force a mode in tests / Storybook. Overrides stored preference. */
@@ -53,14 +73,22 @@ interface ThemeProviderProps {
 export function ThemeProvider({ children, forceMode }: ThemeProviderProps) {
   const systemScheme = useColorScheme();
   const [preference, setPreferenceState] = useState<ThemePreference>(readStoredPreference);
+  const [density, setDensityState] = useState<Density>(readStoredDensity);
 
   // Persist whenever the user changes their preference.
   useEffect(() => {
     kv.set(STORAGE_KEY, preference);
   }, [preference]);
+  useEffect(() => {
+    kv.set(DENSITY_KEY, density);
+  }, [density]);
 
   const setPreference = useCallback((next: ThemePreference) => {
     setPreferenceState(next);
+  }, []);
+
+  const setDensity = useCallback((next: Density) => {
+    setDensityState(next);
   }, []);
 
   const toggle = useCallback(() => {
@@ -75,6 +103,8 @@ export function ThemeProvider({ children, forceMode }: ThemeProviderProps) {
     forceMode ??
     (preference === 'system' ? (systemScheme === 'dark' ? 'dark' : 'light') : preference);
 
+  const densityScale = density === 'compact' ? 0.75 : 1;
+
   const value = useMemo<ThemeContextValue>(
     () => ({
       theme: themes[mode],
@@ -82,12 +112,15 @@ export function ThemeProvider({ children, forceMode }: ThemeProviderProps) {
       preference,
       setPreference,
       toggle,
+      density,
+      setDensity,
+      densityScale,
       palette,
       radii,
       spacing,
       shadow,
     }),
-    [mode, preference, setPreference, toggle],
+    [density, densityScale, mode, preference, setDensity, setPreference, toggle],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

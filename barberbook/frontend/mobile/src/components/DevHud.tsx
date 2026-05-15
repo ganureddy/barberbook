@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDevEventsStore } from '../api/devEvents';
 import { palette, radii, spacing } from '../design/tokens';
 import { env } from '../lib/env';
+import { useOnlineStatus } from '../lib/offline';
 import { navigate } from '../navigation/ref';
 import { useAuthStore } from '../store/useAuthStore';
 import { useLocationStore } from '../store/useLocationStore';
@@ -33,6 +34,7 @@ export function DevHud() {
     sid: s.sid,
   }));
   const loc = useLocationStore((s) => s.current);
+  const online = useOnlineStatus();
   const lastCall = lastCalls[0];
 
   if (!__DEV__) return null;
@@ -45,12 +47,19 @@ export function DevHud() {
             setExpanded((x) => !x);
           }}
           onLongPress={clear}
+          accessibilityRole="button"
+          accessibilityLabel="Open dev HUD"
           style={[styles.badge, expanded && styles.badgeExpanded]}
         >
           <View style={[styles.dot, { backgroundColor: env.mock ? palette.gold : palette.red }]} />
           <Text variant="labelSm" color={palette.cream}>
             {env.mock ? 'MOCK' : 'LIVE'}
           </Text>
+          {!online && (
+            <Text variant="labelSm" color={palette.gold}>
+              · OFFLINE
+            </Text>
+          )}
           {lastCall && (
             <Text variant="labelSm" color={palette.cream}>
               {lastCall.method} {String(lastCall.status ?? '...')}

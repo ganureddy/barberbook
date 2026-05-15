@@ -16,7 +16,7 @@ import Animated, {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { requestOtp, verifyOtp } from '../../api/auth';
-import { Button, Icon, OtpInput, Text, type OtpInputHandle } from '../../components';
+import { BackIcon, Button, Icon, OtpInput, Text, type OtpInputHandle } from '../../components';
 import { useTheme } from '../../design/ThemeProvider';
 import { palette, radii, spacing } from '../../design/tokens';
 import { env } from '../../lib/env';
@@ -140,7 +140,7 @@ export function OtpVerify() {
             accessibilityRole="button"
             accessibilityLabel={t('common.back')}
           >
-            <Icon name="chevronLeft" size={22} />
+            <BackIcon size={22} />
           </Pressable>
 
           <View>

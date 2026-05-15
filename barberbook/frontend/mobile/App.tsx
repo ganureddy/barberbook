@@ -19,14 +19,20 @@ import { ThemeProvider, useTheme } from './src/design/ThemeProvider';
 import { palette } from './src/design/tokens';
 import { useAppFonts } from './src/design/typography';
 import { initI18n } from './src/i18n';
+import { attachOfflineBridge } from './src/lib/offline';
 import { attachPushListeners, registerPush } from './src/lib/push';
+import { initSentry } from './src/lib/sentry';
 import { RootNavigator, linking, navigationRef } from './src/navigation';
 import { useAuthStore } from './src/store/useAuthStore';
 import { useBookingDraftStore } from './src/store/useBookingDraftStore';
 
-// Initialize i18n eagerly at module load so screens can call `useTranslation()`
-// from their first render without an extra hydration tick.
+// Boot-time, dependency-free initializers. Run in this order:
+// 1. Sentry first so any crash during the rest of init still ships.
+// 2. i18n so the first render of every screen has translations.
+// 3. Offline bridge wires NetInfo into react-query's onlineManager.
+initSentry();
 initI18n();
+attachOfflineBridge();
 
 /**
  * Provider chain (mounting order matters):
