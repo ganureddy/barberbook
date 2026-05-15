@@ -1,0 +1,90 @@
+{
+  "common": {
+    "continue": "Continue",
+    "back": "Back",
+    "cancel": "Cancel",
+    "skip": "Skip",
+    "done": "Done",
+    "retry": "Retry",
+    "edit": "Edit",
+    "and": "and"
+  },
+  "splash": {
+    "kicker": "BARBERBOOK",
+    "wordmark_line_1": "Barber",
+    "wordmark_line_2": "Book",
+    "tagline": "The chair is waiting.",
+    "cta": "Get started",
+    "loading": "Polishing the chair…"
+  },
+  "role": {
+    "title": "Pick your seat",
+    "subtitle": "How will you use BarberBook?",
+    "customer_title": "Book a chair",
+    "customer_sub": "Find a barber, book a chair, walk in like a regular.",
+    "owner_title": "Run a shop",
+    "owner_sub": "Manage seats, roster, walk-ins, and money.",
+    "staff_title": "I'm a barber",
+    "staff_sub": "Your day in one screen. Less distraction."
+  },
+  "phone": {
+    "kicker": "STEP 1 OF 2",
+    "title": "Your number",
+    "subtitle": "We'll text you a 6-digit code.",
+    "placeholder": "98765 43210",
+    "country_label": "Country",
+    "or_continue_with": "Or continue with",
+    "apple": "Continue with Apple",
+    "google": "Continue with Google",
+    "tos": "By continuing you agree to our Terms and Privacy Policy.",
+    "invalid": "Enter a 10-digit Indian mobile number."
+  },
+  "otp": {
+    "kicker": "STEP 2 OF 2",
+    "title": "Check your messages",
+    "subtitle_prefix": "Enter the 6-digit code sent to ",
+    "edit_phone": "Use a different number",
+    "resend_in": "Resend in {{seconds}}s",
+    "resend": "Resend code",
+    "verifying": "Verifying…",
+    "autofill_hint": "Tip: copy the code and tap any box to autofill.",
+    "wrong_code": "Wrong code. Try again.",
+    "mock_hint": "Mock OTP: 4242"
+  },
+  "location": {
+    "kicker": "ONE LAST THING",
+    "title": "Find shops near you",
+    "subtitle": "We'll only use your location to show nearby chairs and ETAs. You can change this anytime in Settings.",
+    "allow": "Allow location",
+    "later": "Maybe later",
+    "denied_hint": "No problem — you can browse by city instead."
+  },
+  "discover": {
+    "header_title": "Find a chair",
+    "tabs": {
+      "for_you": "For you",
+      "quickest": "Quickest",
+      "top": "Top rated",
+      "budget": "Budget"
+    },
+    "filters": {
+      "open_now": "Open now",
+      "walkin": "Walk-in OK",
+      "highest_rated": "Highest rated",
+      "beard": "Beard",
+      "color": "Color"
+    },
+    "open": "OPEN",
+    "closed": "CLOSED",
+    "walkin_ok": "WALK-IN OK",
+    "distance_eta": "{{distance}} km · {{eta}}",
+    "view_list": "List",
+    "view_map": "Map",
+    "results_count": "{{count}} shops nearby",
+    "results_count_zero": "No shops in range",
+    "results_count_one": "1 shop nearby",
+    "loading": "Finding chairs…",
+    "card_book": "Book",
+    "tier_label": "Price"
+  }
+}

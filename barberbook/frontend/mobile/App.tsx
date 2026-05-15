@@ -17,8 +17,13 @@ import { ToastHost } from './src/components/ToastHost';
 import { ThemeProvider, useTheme } from './src/design/ThemeProvider';
 import { palette } from './src/design/tokens';
 import { useAppFonts } from './src/design/typography';
+import { initI18n } from './src/i18n';
 import { RootNavigator, linking, navigationRef } from './src/navigation';
 import { useAuthStore } from './src/store/useAuthStore';
+
+// Initialize i18n eagerly at module load so screens can call `useTranslation()`
+// from their first render without an extra hydration tick.
+initI18n();
 
 /**
  * Provider chain (mounting order matters):

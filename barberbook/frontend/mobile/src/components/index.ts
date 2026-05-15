@@ -11,3 +11,4 @@ export { BarberPole, type BarberPoleProps } from './BarberPole';
 export { ShopPhoto, type ShopPhotoProps } from './ShopPhoto';
 export { ToastHost } from './ToastHost';
 export { DevHud } from './DevHud';
+export { OtpInput, type OtpInputProps, type OtpInputHandle } from './OtpInput';
