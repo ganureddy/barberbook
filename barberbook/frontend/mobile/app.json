@@ -34,7 +34,8 @@
     },
     "plugins": [
       "expo-localization",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-font"
     ],
     "extra": {
       "frappe": {

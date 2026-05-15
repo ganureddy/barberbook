@@ -4,16 +4,31 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@theme/*": ["src/theme/*"],
-      "@lib/*": ["src/lib/*"]
+      "@/*": [
+        "src/*"
+      ],
+      "@design/*": [
+        "src/design/*"
+      ],
+      "@components/*": [
+        "src/components/*"
+      ],
+      "@screens/*": [
+        "src/screens/*"
+      ],
+      "@lib/*": [
+        "src/lib/*"
+      ]
     }
   },
   "include": [
     "**/*.ts",
-    "**/*.tsx",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "**/*.tsx"
   ],
-  "exclude": ["node_modules", ".expo", "dist", "web-build"]
+  "exclude": [
+    "node_modules",
+    ".expo",
+    "dist",
+    "web-build"
+  ]
 }
