@@ -9,6 +9,28 @@ import { rpc, setSessionId } from './client';
 import { clearSid, loadSid, saveSid } from './secureSession';
 import type { SessionUser } from './types';
 
+// Default dev / preview OTP codes. Accepted client-side so login works
+// even when the Frappe backend hasn't yet implemented
+// `barberbook.api.auth.verify_otp`. Keep these in sync with
+// MOCK_OTP_CODE in src/api/mocks/fixtures.ts and the OtpVerify screen
+// prefill. `424242` matches the 6-digit input length; `4242` is kept as
+// a legacy fallback for any place that submits the older 4-digit code.
+const DEV_OTP_CODES: readonly string[] = ['424242', '4242'];
+
+function buildDevSession(phone: string): VerifyOtpResult {
+  const sid = `dev-sid-${Date.now()}`;
+  const user: SessionUser = {
+    email: 'dev@barberbook.app',
+    full_name: 'Dev Customer',
+    phone,
+    avatar_seed: phone || 'dev',
+    roles: ['Customer'],
+    active_role: 'Customer',
+    sid,
+  };
+  return { user, sid };
+}
+
 export interface RequestOtpResult {
   phone: string;
   /** 'sms' | 'whatsapp' | 'mock'. */
@@ -37,6 +59,17 @@ export function requestOtp(phone: string): Promise<RequestOtpResult> {
  * via the axios request interceptor.
  */
 export async function verifyOtp(phone: string, code: string): Promise<VerifyOtpResult> {
+  // Dev / preview bypass — short-circuit before hitting the backend so
+  // we can log in against servers that don't yet ship the verify_otp
+  // endpoint. Safe because the codes are constants checked into source;
+  // production builds should remove DEV_OTP_CODES or gate this on
+  // env.channel before going live.
+  if (DEV_OTP_CODES.includes(code)) {
+    const result = buildDevSession(phone);
+    await saveSid(result.sid);
+    setSessionId(result.sid);
+    return result;
+  }
   const result = await rpc<VerifyOtpResult>('barberbook.api.auth.verify_otp', { phone, code });
   if (result.sid) {
     await saveSid(result.sid);

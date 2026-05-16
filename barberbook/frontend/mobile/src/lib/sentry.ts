@@ -15,9 +15,22 @@
  *     shipped.
  */
 
-import * as Sentry from '@sentry/react-native';
-
 import { env } from './env';
+
+// `@sentry/react-native` ships a native module that is NOT bundled into
+// Expo Go. Static `import` would crash the JS bundle at module-eval time
+// (the "Something went wrong" red screen). Load it lazily through
+// `require` inside a try/catch so Expo Go silently runs without Sentry,
+// while dev/EAS builds (which DO contain the native module) still get
+// full crash reporting.
+type SentryModule = typeof import('@sentry/react-native');
+let Sentry: SentryModule | null = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  Sentry = require('@sentry/react-native') as SentryModule;
+} catch {
+  Sentry = null;
+}
 
 let initialised = false;
 
@@ -55,6 +68,14 @@ function scrubHeaders(
 export function initSentry(): void {
   if (initialised) return;
   initialised = true;
+
+  if (!Sentry) {
+    if (__DEV__) {
+      // eslint-disable-next-line no-console
+      console.info('[barberbook] Sentry disabled — native module unavailable (running in Expo Go?)');
+    }
+    return;
+  }
 
   const dsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
   if (!dsn) {
@@ -117,7 +138,7 @@ export function initSentry(): void {
 /** Manually capture an exception. Wraps `Sentry.captureException` so
  *  call sites don't need a direct dependency on the SDK module. */
 export function captureException(err: unknown, context?: Record<string, unknown>): void {
-  if (!initialised) return;
+  if (!initialised || !Sentry) return;
   Sentry.captureException(err, { extra: context });
 }
 

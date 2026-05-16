@@ -30,6 +30,11 @@ type Rt = RouteProp<OnboardingStackParamList, 'OtpVerify'>;
 const RESEND_COOLDOWN_S = 30;
 const OTP_LENGTH = 6;
 
+// Default OTP for dev / mock-mode login — matches MOCK_OTP_CODE in
+// src/api/mocks/fixtures.ts and the server-side dev bypass. Prefilled
+// into the input when env.mock is on so testers can just tap Continue.
+const DEFAULT_DEV_OTP = '424242';
+
 export function OtpVerify() {
   const nav = useNavigation<Nav>();
   const { params } = useRoute<Rt>();
@@ -37,7 +42,7 @@ export function OtpVerify() {
   const { theme } = useTheme();
   const setSession = useAuthStore((s) => s.setSession);
 
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState(env.mock ? DEFAULT_DEV_OTP : '');
   const [errored, setErrored] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [resendIn, setResendIn] = useState(RESEND_COOLDOWN_S);

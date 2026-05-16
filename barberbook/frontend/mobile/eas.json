@@ -26,8 +26,7 @@
       "env": {
         "EXPO_PUBLIC_CHANNEL": "dev",
         "EXPO_PUBLIC_MOCK": "1",
-        "EXPO_PUBLIC_FRAPPE_URL": "https://staging.barberbook.app",
-        "EXPO_PUBLIC_SENTRY_DSN": ""
+        "EXPO_PUBLIC_FRAPPE_URL": "http://184.168.124.163"
       }
     },
     "preview": {
@@ -43,9 +42,21 @@
       },
       "env": {
         "EXPO_PUBLIC_CHANNEL": "preview",
-        "EXPO_PUBLIC_MOCK": "0",
-        "EXPO_PUBLIC_FRAPPE_URL": "https://staging.barberbook.app",
-        "EXPO_PUBLIC_SENTRY_DSN": "$EXPO_PUBLIC_SENTRY_DSN_STAGING"
+        "EXPO_PUBLIC_MOCK": "1",
+        "EXPO_PUBLIC_FRAPPE_URL": "http://184.168.124.163"
+      }
+    },
+    "android-lifescc": {
+      "extends": "base",
+      "distribution": "internal",
+      "channel": "lifescc",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_CHANNEL": "lifescc",
+        "EXPO_PUBLIC_MOCK": "1",
+        "EXPO_PUBLIC_FRAPPE_URL": "http://184.168.124.163"
       }
     },
     "production": {
@@ -61,17 +72,12 @@
       "env": {
         "EXPO_PUBLIC_CHANNEL": "production",
         "EXPO_PUBLIC_MOCK": "0",
-        "EXPO_PUBLIC_FRAPPE_URL": "https://app.barberbook.app",
-        "EXPO_PUBLIC_SENTRY_DSN": "$EXPO_PUBLIC_SENTRY_DSN_PROD"
+        "EXPO_PUBLIC_FRAPPE_URL": "http://184.168.124.163"
       }
     }
   },
   "submit": {
     "production": {
-      "ios": {
-        "ascAppId": "$ASC_APP_ID",
-        "appleTeamId": "$APPLE_TEAM_ID"
-      },
       "android": {
         "track": "production",
         "releaseStatus": "draft",

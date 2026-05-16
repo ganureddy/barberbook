@@ -473,4 +473,4 @@ export const MOCK_USER: SessionUser = {
   sid: 'mock-sid-arya',
 };
 
-export const MOCK_OTP_CODE = '4242';
+export const MOCK_OTP_CODE = '424242';

@@ -190,7 +190,7 @@ export function routeMock(config: AxiosRequestConfig): AxiosResponse | null {
     const code = String(body?.code ?? '');
     const expected = otpStore.get(phone) ?? MOCK_OTP_CODE;
     if (code !== expected) {
-      return notFound(config, 'Invalid OTP (mock). Try 4242.');
+      return notFound(config, `Invalid OTP (mock). Try ${MOCK_OTP_CODE}.`);
     }
     const user: SessionUser = { ...MOCK_USER, phone };
     sessionUsers.set(user.sid ?? '', user);

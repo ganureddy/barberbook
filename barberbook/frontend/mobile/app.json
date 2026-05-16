@@ -71,12 +71,12 @@
         "siteUrlEnv": "EXPO_PUBLIC_FRAPPE_URL"
       },
       "eas": {
-        "projectId": "00000000-0000-0000-0000-000000000000"
+        "projectId": "748cc12c-e156-46f6-a23a-910128f3e29f"
       }
     },
-    "owner": "barberbook",
+    "owner": "ganureddylife",
     "updates": {
-      "url": "https://u.expo.dev/00000000-0000-0000-0000-000000000000",
+      "url": "https://u.expo.dev/748cc12c-e156-46f6-a23a-910128f3e29f",
       "fallbackToCacheTimeout": 0
     }
   }
