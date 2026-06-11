@@ -20,7 +20,14 @@ export function MenuTab({ shopId }: Props) {
   const servicesQ = useServicesForShop(shopId);
   const startForShop = useBookingDraftStore((s) => s.startForShop);
   const toggleService = useBookingDraftStore((s) => s.toggleService);
-  const draftServiceNames = useBookingDraftStore((s) => new Set(s.services.map((x) => x.name)));
+  // Subscribe to the stable `services` array, then derive the lookup Set in
+  // useMemo. Returning `new Set(...)` straight from the selector would hand
+  // Zustand a fresh reference every render → infinite re-render loop.
+  const draftServices = useBookingDraftStore((s) => s.services);
+  const draftServiceNames = useMemo(
+    () => new Set(draftServices.map((x) => x.name)),
+    [draftServices],
+  );
 
   // Group by category so the menu reads like a printed barber-shop board.
   const grouped = useMemo(() => {

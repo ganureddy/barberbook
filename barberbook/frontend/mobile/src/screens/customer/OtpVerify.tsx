@@ -41,6 +41,7 @@ export function OtpVerify() {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const setSession = useAuthStore((s) => s.setSession);
+  const setActiveRole = useAuthStore((s) => s.setActiveRole);
 
   const [code, setCode] = useState(env.mock ? DEFAULT_DEV_OTP : '');
   const [errored, setErrored] = useState(false);
@@ -89,8 +90,16 @@ export function OtpVerify() {
         const result = await verifyOtp(params.phone, value);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
         setSession(result.user, result.sid);
-        // Continue to LocationPerm — root navigator stays on Onboarding because
-        // the customer flow needs the location step before discovery.
+
+        // Owner / Staff: enter the chosen workspace. The root navigator
+        // switches trees off `activeRole`, so setting it here is enough —
+        // no LocationPerm step (that's a customer-discovery concern).
+        if (params.role === 'Owner' || params.role === 'Staff') {
+          setActiveRole(params.role);
+          return;
+        }
+
+        // Customer (default): location step before discovery.
         nav.navigate('LocationPerm');
       } catch {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
@@ -103,7 +112,7 @@ export function OtpVerify() {
         setVerifying(false);
       }
     },
-    [nav, params.phone, setSession, t, triggerShake, verifying],
+    [nav, params.phone, params.role, setSession, setActiveRole, t, triggerShake, verifying],
   );
 
   const onChange = (next: string) => {

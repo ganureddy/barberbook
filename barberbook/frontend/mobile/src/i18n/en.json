@@ -202,7 +202,9 @@
   },
   "share": {
     "subject": "Booked at {{shop}}",
-    "message": "Just booked a chair at {{shop}} via BarberBook. Token {{token}} at {{when}}."
+    "message": "Just booked a chair at {{shop}} via BarberBook. Token {{token}} at {{when}}.",
+    "subject_app": "BarberBook",
+    "message_app": "Check out BarberBook — book your next haircut in seconds. https://barberbook.app"
   },
   "loyalty": {
     "title": "Rewards",

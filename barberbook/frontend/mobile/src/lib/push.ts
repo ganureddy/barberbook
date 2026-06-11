@@ -35,15 +35,32 @@ const SCHEDULED_KEY_PREFIX = 'barberbook.push.scheduled.';
 // Tell Notifications how to render an incoming push while the app is open.
 // Showing the banner+sound mirrors what the OS does in the background, so
 // users notice the booking confirmation even mid-app.
-Notifications.setNotificationHandler({
-  handleNotification: () =>
-    Promise.resolve({
-      shouldShowBanner: true,
-      shouldShowList: true,
-      shouldPlaySound: true,
-      shouldSetBadge: false,
-    }),
-});
+//
+// IMPORTANT: do NOT call `setNotificationHandler` at module-eval time on
+// Android. Expo SDK 54 lazily initialises the notifications native module,
+// and a module-level call sometimes fires before the JS bridge is fully
+// ready, crashing `Application.onCreate` with no JS stack — the dreaded
+// "BarberBook keeps stopping" dialog. We instead install the handler from
+// `attachPushListeners()`, which runs inside a `useEffect` after mount.
+let handlerInstalled = false;
+function ensureNotificationHandler(): void {
+  if (handlerInstalled) return;
+  handlerInstalled = true;
+  try {
+    Notifications.setNotificationHandler({
+      handleNotification: () =>
+        Promise.resolve({
+          shouldShowBanner: true,
+          shouldShowList: true,
+          shouldPlaySound: true,
+          shouldSetBadge: false,
+        }),
+    });
+  } catch {
+    // Native module unavailable in this runtime (Expo Go without dev
+    // client) — leaving the OS default behaviour is fine.
+  }
+}
 
 // Android: requires a channel before a notification can be posted.
 async function ensureAndroidChannel(): Promise<void> {
@@ -143,6 +160,7 @@ interface PushPayload {
  * returns a teardown that removes them. Call once at app boot.
  */
 export function attachPushListeners(): () => void {
+  ensureNotificationHandler();
   const recv = Notifications.addNotificationReceivedListener(() => {
     // No-op for now — `setNotificationHandler` already shows the banner.
     // Hook future analytics here ('push_received').

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useShallow } from 'zustand/react/shallow';
 
 import { useDevEventsStore } from '../api/devEvents';
 import { palette, radii, spacing } from '../design/tokens';
@@ -27,12 +28,19 @@ export function DevHud() {
   const [expanded, setExpanded] = useState(false);
   const lastCalls = useDevEventsStore((s) => s.lastCalls);
   const clear = useDevEventsStore((s) => s.clear);
-  const auth = useAuthStore((s) => ({
-    status: s.status,
-    role: s.activeRole,
-    user: s.user,
-    sid: s.sid,
-  }));
+  // NOTE: this selector returns a fresh object, so it MUST go through
+  // `useShallow`. Without it, Zustand v5 (Object.is equality) sees a new
+  // snapshot every render → infinite re-render → "Maximum update depth
+  // exceeded". The hooks run before the `__DEV__` early-return below, so
+  // this would crash release builds too.
+  const auth = useAuthStore(
+    useShallow((s) => ({
+      status: s.status,
+      role: s.activeRole,
+      user: s.user,
+      sid: s.sid,
+    })),
+  );
   const loc = useLocationStore((s) => s.current);
   const online = useOnlineStatus();
   const lastCall = lastCalls[0];

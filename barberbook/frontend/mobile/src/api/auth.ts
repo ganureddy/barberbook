@@ -5,16 +5,20 @@
  * contract). In mock mode the router answers these without a network hop.
  */
 
+import { env } from '../lib/env';
+
 import { rpc, setSessionId } from './client';
 import { clearSid, loadSid, saveSid } from './secureSession';
 import type { SessionUser } from './types';
 
-// Default dev / preview OTP codes. Accepted client-side so login works
-// even when the Frappe backend hasn't yet implemented
-// `barberbook.api.auth.verify_otp`. Keep these in sync with
-// MOCK_OTP_CODE in src/api/mocks/fixtures.ts and the OtpVerify screen
-// prefill. `424242` matches the 6-digit input length; `4242` is kept as
-// a legacy fallback for any place that submits the older 4-digit code.
+// Default dev / preview OTP codes. Accepted client-side ONLY when
+// `EXPO_PUBLIC_MOCK=1` — i.e. the mobile is talking to the in-process
+// mock router, not the real Frappe backend. With MOCK=0 we always go
+// through `barberbook.api.auth.verify_otp` so the server issues a real
+// Frappe sid and downstream API calls authenticate. The Frappe site is
+// configured (`barberbook_dev_otp: 1` in site_config) to accept the same
+// `424242` constant against the real verify_otp, so the UX is identical.
+// `4242` is kept as a legacy fallback for older test scripts.
 const DEV_OTP_CODES: readonly string[] = ['424242', '4242'];
 
 function buildDevSession(phone: string): VerifyOtpResult {
@@ -59,12 +63,10 @@ export function requestOtp(phone: string): Promise<RequestOtpResult> {
  * via the axios request interceptor.
  */
 export async function verifyOtp(phone: string, code: string): Promise<VerifyOtpResult> {
-  // Dev / preview bypass — short-circuit before hitting the backend so
-  // we can log in against servers that don't yet ship the verify_otp
-  // endpoint. Safe because the codes are constants checked into source;
-  // production builds should remove DEV_OTP_CODES or gate this on
-  // env.channel before going live.
-  if (DEV_OTP_CODES.includes(code)) {
+  // Dev / preview bypass — only when running fully offline against the
+  // mock router. With MOCK=0 we always go through the real backend so
+  // the Frappe sid is genuine and the User row exists.
+  if (env.mock && DEV_OTP_CODES.includes(code)) {
     const result = buildDevSession(phone);
     await saveSid(result.sid);
     setSessionId(result.sid);

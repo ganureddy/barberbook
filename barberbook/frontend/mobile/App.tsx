@@ -14,6 +14,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { persistOptions, queryClient } from './src/api';
 import { DevHud } from './src/components/DevHud';
+import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { ToastHost } from './src/components/ToastHost';
 import { ThemeProvider, useTheme } from './src/design/ThemeProvider';
 import { palette } from './src/design/tokens';
@@ -49,15 +50,17 @@ attachOfflineBridge();
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
-          <ThemeProvider>
-            <BottomSheetModalProvider>
-              <Root />
-            </BottomSheetModalProvider>
-          </ThemeProvider>
-        </PersistQueryClientProvider>
-      </SafeAreaProvider>
+      <ErrorBoundary>
+        <SafeAreaProvider>
+          <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
+            <ThemeProvider>
+              <BottomSheetModalProvider>
+                <Root />
+              </BottomSheetModalProvider>
+            </ThemeProvider>
+          </PersistQueryClientProvider>
+        </SafeAreaProvider>
+      </ErrorBoundary>
     </GestureHandlerRootView>
   );
 }
@@ -115,7 +118,7 @@ function Root() {
         <RootNavigator />
       </NavigationContainer>
       <ToastHost />
-      <DevHud />
+      {__DEV__ && <DevHud />}
     </>
   );
 }

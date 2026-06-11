@@ -28,9 +28,9 @@ export interface CoarseLocation {
 }
 
 const DEFAULT_FALLBACK: CoarseLocation = {
-  latitude: 12.9716,
-  longitude: 77.5946,
-  city: 'Bengaluru',
+  latitude: 11.2588,
+  longitude: 75.7804,
+  city: 'Kozhikode',
   country: 'IN',
   takenAt: 0,
   accuracy: undefined,

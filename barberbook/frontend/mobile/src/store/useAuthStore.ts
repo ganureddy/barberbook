@@ -64,10 +64,12 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       return;
     }
 
-    const activeRole =
-      storedRole && user.roles.includes(storedRole)
-        ? storedRole
-        : (user.active_role ?? user.roles[0] ?? null);
+    // Honour the workspace the user last picked (Customer / Owner / Staff),
+    // even if the backend's role list doesn't include it yet — the app lets
+    // users choose their workspace at onboarding, and we don't want a
+    // returning owner/barber bounced back to the role picker on every launch.
+    // Falls back to the backend's active role / first role for fresh logins.
+    const activeRole = storedRole ?? user.active_role ?? user.roles[0] ?? null;
 
     set({
       status: 'authenticated',

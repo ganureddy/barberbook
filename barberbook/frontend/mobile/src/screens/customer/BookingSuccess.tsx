@@ -4,7 +4,7 @@ import * as Haptics from 'expo-haptics';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, Share, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, Share, StyleSheet, useWindowDimensions, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import Animated, {
   Easing,
@@ -31,6 +31,9 @@ export function BookingSuccess() {
   const nav = useNavigation<Nav>();
   const { params } = useRoute<Rt>();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  // Size the QR to the screen so it never overflows on small phones.
+  const qrSize = Math.max(140, Math.min(200, width - 152));
 
   const bookingId = (params as { bookingId?: string } | undefined)?.bookingId ?? null;
   const bookingQ = useBooking(bookingId);
@@ -72,17 +75,20 @@ export function BookingSuccess() {
   }));
 
   const onShare = async () => {
-    if (!booking) return;
     Haptics.selectionAsync().catch(() => {});
-    try {
-      await Share.share({
-        message: t('share.message', {
+    // Always open the OS share sheet (WhatsApp, Instagram, Bluetooth, etc.).
+    // When a specific booking is loaded we share its details; otherwise we
+    // fall back to a generic app-share so the button is never a dead tap.
+    const message = booking
+      ? t('share.message', {
           shop: booking.shop,
           token: booking.token_code,
           when: booking.scheduled_at,
-        }),
-        title: t('share.subject', { shop: booking.shop }),
-      });
+        })
+      : t('share.message_app');
+    const title = booking ? t('share.subject', { shop: booking.shop }) : t('share.subject_app');
+    try {
+      await Share.share({ message, title });
     } catch {
       // User cancelled or share unavailable; nothing to do.
     }
@@ -108,7 +114,11 @@ export function BookingSuccess() {
           </Pressable>
         </View>
 
-        <View style={styles.body}>
+        <ScrollView
+          style={styles.bodyScroll}
+          contentContainerStyle={styles.body}
+          showsVerticalScrollIndicator={false}
+        >
           <Text variant="labelSm" color={palette.gold}>
             {t('booking.success_kicker')}
           </Text>
@@ -131,7 +141,7 @@ export function BookingSuccess() {
               <View style={styles.qrFrame}>
                 <QRCode
                   value={qrValue}
-                  size={184}
+                  size={qrSize}
                   color={palette.ink}
                   backgroundColor={palette.cream}
                   ecl="M"
@@ -162,7 +172,7 @@ export function BookingSuccess() {
               </Text>
             </View>
           </Animated.View>
-        </View>
+        </ScrollView>
 
         <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.md }]}>
           <View style={{ flexDirection: 'row', gap: spacing.sm }}>
@@ -223,10 +233,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  body: {
+  bodyScroll: {
     flex: 1,
+  },
+  body: {
+    flexGrow: 1,
     paddingHorizontal: spacing['2xl'],
     paddingTop: spacing.lg,
+    paddingBottom: spacing.lg,
   },
   qrCardWrap: {
     marginTop: spacing.xl,

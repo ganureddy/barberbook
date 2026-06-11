@@ -19,6 +19,11 @@
 
 import type { NavigatorScreenParams } from '@react-navigation/native';
 
+import type { UserRole } from '../api/types';
+
+/** Role a user picks on the onboarding RoleSelect screen. */
+export type OnboardingRole = Extract<UserRole, 'Customer' | 'Owner' | 'Staff'>;
+
 // ─── Root ───────────────────────────────────────────────────────────────────
 
 export type RootStackParamList = {
@@ -35,8 +40,8 @@ export type RootStackParamList = {
 export type OnboardingStackParamList = {
   Splash: undefined;
   RoleSelect: undefined;
-  PhoneEntry: undefined;
-  OtpVerify: { phone: string };
+  PhoneEntry: { role?: OnboardingRole } | undefined;
+  OtpVerify: { phone: string; role?: OnboardingRole };
   LocationPerm: undefined;
 };
 

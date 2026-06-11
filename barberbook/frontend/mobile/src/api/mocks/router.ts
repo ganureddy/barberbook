@@ -16,6 +16,7 @@ import type {
   ListParams,
   Review,
   SessionUser,
+  Shop,
   WalkinTicket,
 } from '../types';
 
@@ -371,6 +372,48 @@ export function routeMock(config: AxiosRequestConfig): AxiosResponse | null {
   }
 
   // ─── Owner endpoints ────────────────────────────────────────────────
+  if (url.endsWith('/api/method/barberbook.api.owner.create_shop')) {
+    const b = body ?? {};
+    const idx = SHOPS.length + 1;
+    const name = String(b.shop_name ?? 'New Shop').trim() || 'New Shop';
+    const slug =
+      String(b.slug ?? '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '') ||
+      name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+    const shop: Shop = {
+      ...baseAuditMock(),
+      doctype: 'BB Shop',
+      name: `BB-SHOP-${String(10000 + idx)}`,
+      shop_name: name,
+      slug,
+      owner_user: MOCK_USER.email,
+      status: 'Active',
+      country: 'IN',
+      city: String(b.city ?? 'Kozhikode'),
+      address_line: String(b.address_line ?? ''),
+      pincode: String(b.pincode ?? ''),
+      latitude: Number(b.latitude ?? 11.2588),
+      longitude: Number(b.longitude ?? 75.7804),
+      rating: 0,
+      rating_count: 0,
+      price_tier: 2,
+      is_open: 1,
+      accepts_walkin: 1,
+      cover_variant: (idx % 4) as 0 | 1 | 2 | 3,
+      open_time: String(b.open_time ?? '09:00:00'),
+      close_time: String(b.close_time ?? '21:00:00'),
+      phone: String(b.phone ?? ''),
+      currency: 'INR',
+    };
+    SHOPS.push(shop);
+    return ok({ message: shop }, config);
+  }
+
   if (url.endsWith('/api/method/barberbook.api.owner.today')) {
     const merged = { ...params, ...(body ?? {}) } as Record<string, unknown>;
     const shopId = String(merged.shop ?? '');

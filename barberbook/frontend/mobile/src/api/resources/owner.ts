@@ -1,5 +1,28 @@
 import { rpc, rpcGet } from '../client';
-import type { Booking, BookingStatus, WalkinTicket } from '../types';
+import type { Booking, BookingStatus, Shop, WalkinTicket } from '../types';
+
+// ─── Shop enrollment (owner onboarding) ─────────────────────────────────────
+
+export interface CreateShopInput {
+  shop_name: string;
+  slug?: string;
+  phone?: string;
+  address_line?: string;
+  city?: string;
+  pincode?: string;
+  latitude: number;
+  longitude: number;
+  open_time?: string;
+  close_time?: string;
+}
+
+/**
+ * Enroll a new shop for the signed-in owner. The created shop immediately
+ * becomes discoverable to customers (it lands in the shop list + map).
+ */
+export function createShop(input: CreateShopInput): Promise<Shop> {
+  return rpc<Shop>('barberbook.api.owner.create_shop', input);
+}
 
 // ─── KPIs + today's timeline ────────────────────────────────────────────────
 

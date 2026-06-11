@@ -8,19 +8,20 @@ import { useTranslation } from 'react-i18next';
 import {
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   TextInput,
   View,
 } from 'react-native';
-import MapView, { type Region } from 'react-native-maps';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { createShop } from '../../api/resources/owner';
 import { Button, DenseHeader, Icon, Text } from '../../components';
+import { LeafletMap } from '../../components/LeafletMap';
 import { useTheme } from '../../design/ThemeProvider';
 import { palette, radii, spacing } from '../../design/tokens';
 import { fontFamilies } from '../../design/typography';
+import { reverseGeocode } from '../../lib/geocode';
 import { toast } from '../../lib/toast';
 import type { ShopStackParamList } from '../../navigation/types';
 
@@ -40,12 +41,7 @@ interface FormState {
 }
 
 const TOTAL_STEPS = 5;
-const DEFAULT_REGION: Region = {
-  latitude: 12.9716,
-  longitude: 77.5946,
-  latitudeDelta: 0.04,
-  longitudeDelta: 0.04,
-};
+const DEFAULT_COORDS = { latitude: 12.9716, longitude: 77.5946 };
 
 const INITIAL: FormState = {
   shop_name: '',
@@ -54,8 +50,8 @@ const INITIAL: FormState = {
   address_line: '',
   city: 'Bengaluru',
   pincode: '',
-  latitude: DEFAULT_REGION.latitude,
-  longitude: DEFAULT_REGION.longitude,
+  latitude: DEFAULT_COORDS.latitude,
+  longitude: DEFAULT_COORDS.longitude,
   open_time: '09:00',
   close_time: '21:00',
 };
@@ -68,6 +64,8 @@ export function OwnerSignup() {
 
   const [step, setStep] = useState<0 | 1 | 2 | 3 | 4>(0);
   const [form, setForm] = useState<FormState>(INITIAL);
+  const [geoBusy, setGeoBusy] = useState(false);
+  const [enrolling, setEnrolling] = useState(false);
 
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => {
     setForm((prev) => ({ ...prev, [k]: v }));
@@ -86,21 +84,71 @@ export function OwnerSignup() {
     setStep((s) => (s - 1) as 0 | 1 | 2 | 3 | 4);
   };
 
-  const finish = () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-    nav.navigate('OwnerKYC');
+  const finish = async () => {
+    if (enrolling) return;
+    setEnrolling(true);
+    try {
+      await createShop({
+        shop_name: form.shop_name,
+        slug: form.slug,
+        phone: form.phone,
+        address_line: form.address_line,
+        city: form.city,
+        pincode: form.pincode,
+        latitude: form.latitude,
+        longitude: form.longitude,
+        open_time: form.open_time,
+        close_time: form.close_time,
+      });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      toast.success(`${form.shop_name || 'Your shop'} is live — customers can find it now.`);
+      nav.navigate('OwnerKYC');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Could not create the shop.';
+      toast.error(msg);
+    } finally {
+      setEnrolling(false);
+    }
   };
 
-  const reverseGeocode = async (lat: number, lng: number) => {
+  // Resolve the pinned coordinate into a street address via the backend
+  // OpenCage proxy (key lives in Rideshare Settings — never in the bundle).
+  const lookupAddress = async (lat: number, lng: number) => {
+    setGeoBusy(true);
     try {
-      const results = await Location.reverseGeocodeAsync({ latitude: lat, longitude: lng });
-      const top = results[0];
-      if (!top) return;
-      set('address_line', [top.name, top.street].filter(Boolean).join(', ') || form.address_line);
-      set('city', top.city ?? form.city);
-      set('pincode', top.postalCode ?? form.pincode);
+      const r = await reverseGeocode(lat, lng);
+      if (r.address) set('address_line', r.address);
+      if (r.city) set('city', r.city);
+      if (r.postcode) set('pincode', r.postcode);
     } catch {
-      // Permission missing or offline; non-fatal.
+      toast.warn('Reverse-geocode failed; fill in the address manually.');
+    } finally {
+      setGeoBusy(false);
+    }
+  };
+
+  // Grab a GPS fix, then auto-fill the address from it.
+  const detectMyLocation = async () => {
+    Haptics.selectionAsync().catch(() => {});
+    setGeoBusy(true);
+    try {
+      const perm = await Location.requestForegroundPermissionsAsync();
+      if (!perm.granted) {
+        toast.warn('Enable location to auto-detect your shop position.');
+        return;
+      }
+      const fix = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      const lat = fix.coords.latitude;
+      const lng = fix.coords.longitude;
+      set('latitude', lat);
+      set('longitude', lng);
+      await lookupAddress(lat, lng);
+    } catch {
+      toast.warn("Couldn't get your location. Enter the address manually.");
+    } finally {
+      setGeoBusy(false);
     }
   };
 
@@ -185,43 +233,71 @@ export function OwnerSignup() {
                 {t('owner.signup_pin_hint')}
               </Text>
 
-              <View style={styles.mapHost}>
-                <MapView
-                  style={StyleSheet.absoluteFill}
-                  initialRegion={{
-                    latitude: form.latitude,
-                    longitude: form.longitude,
-                    latitudeDelta: 0.02,
-                    longitudeDelta: 0.02,
+              <View style={[styles.mapHost, { borderColor: theme.line }]}>
+                <LeafletMap
+                  selectable
+                  selected={{ lat: form.latitude, lng: form.longitude }}
+                  center={{ lat: form.latitude, lng: form.longitude }}
+                  zoom={15}
+                  onSelect={(lat, lng) => {
+                    set('latitude', lat);
+                    set('longitude', lng);
                   }}
-                  onRegionChangeComplete={(r) => {
-                    set('latitude', r.latitude);
-                    set('longitude', r.longitude);
-                  }}
-                  showsUserLocation
-                  showsMyLocationButton={false}
                 />
-                {/* Center pin overlay so the user just frames the map under it. */}
-                <View style={styles.pinOverlay} pointerEvents="none">
+                <View style={styles.mapHint} pointerEvents="none">
+                  <Icon name="pin" size={12} color={palette.cream} />
+                  <Text variant="labelSm" color={palette.cream}>
+                    TAP MAP TO DROP PIN
+                  </Text>
+                </View>
+              </View>
+
+              <View
+                style={[
+                  styles.locCard,
+                  { backgroundColor: theme.surface, borderColor: theme.line },
+                ]}
+              >
+                <View style={styles.locRow}>
                   <View style={styles.pinDot}>
                     <Icon name="pin" size={18} color={palette.cream} />
                   </View>
-                  <View style={styles.pinShadow} />
+                  <View style={{ flex: 1 }}>
+                    <Text variant="labelSm" color={theme.muted}>
+                      PINNED LOCATION
+                    </Text>
+                    <Text variant="mono">
+                      {form.latitude.toFixed(5)}, {form.longitude.toFixed(5)}
+                    </Text>
+                  </View>
                 </View>
 
-                <Pressable
-                  onPress={() => {
-                    reverseGeocode(form.latitude, form.longitude).catch(() => {
-                      toast.warn('Reverse-geocode failed; fill in the address manually.');
-                    });
-                  }}
-                  style={[styles.geocodeBtn, { backgroundColor: palette.ink }]}
-                >
-                  <Icon name="search" size={14} color={palette.cream} />
-                  <Text variant="label" color={palette.cream}>
-                    REVERSE GEOCODE
-                  </Text>
-                </Pressable>
+                <View style={styles.locActions}>
+                  <Button
+                    variant="ghost"
+                    size="md"
+                    label="Use my location"
+                    loading={geoBusy}
+                    disabled={geoBusy}
+                    leading={<Icon name="pin" size={16} color={palette.red} />}
+                    onPress={() => {
+                      detectMyLocation().catch(() => {});
+                    }}
+                    style={{ flex: 1 }}
+                  />
+                  <Button
+                    variant="primary"
+                    size="md"
+                    label="Look up address"
+                    loading={geoBusy}
+                    disabled={geoBusy}
+                    leading={<Icon name="search" size={16} color={palette.cream} />}
+                    onPress={() => {
+                      lookupAddress(form.latitude, form.longitude).catch(() => {});
+                    }}
+                    style={{ flex: 1 }}
+                  />
+                </View>
               </View>
 
               <LabeledInput
@@ -333,7 +409,11 @@ export function OwnerSignup() {
             variant="red"
             size="lg"
             label={t('owner.signup_finish')}
-            onPress={finish}
+            loading={enrolling}
+            disabled={enrolling}
+            onPress={() => {
+              finish().catch(() => {});
+            }}
             style={{ flex: 2 }}
           />
         )}
@@ -465,16 +545,33 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   mapHost: {
-    height: 220,
+    height: 240,
     borderRadius: radii.md,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.10)',
   },
-  pinOverlay: {
-    ...StyleSheet.absoluteFillObject,
+  mapHint: {
+    position: 'absolute',
+    top: spacing.sm,
+    alignSelf: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: spacing.xs,
+    backgroundColor: 'rgba(14,14,16,0.78)',
+    paddingHorizontal: spacing.md,
+    paddingVertical: 4,
+    borderRadius: radii.pill,
+  },
+  locCard: {
+    borderRadius: radii.md,
+    borderWidth: 1,
+    padding: spacing.md,
+    gap: spacing.md,
+  },
+  locRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
   },
   pinDot: {
     width: 36,
@@ -486,23 +583,9 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: palette.cream,
   },
-  pinShadow: {
-    width: 12,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(0,0,0,0.25)',
-    marginTop: 4,
-  },
-  geocodeBtn: {
-    position: 'absolute',
-    bottom: spacing.sm,
-    right: spacing.sm,
+  locActions: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radii.pill,
+    gap: spacing.sm,
   },
   reviewLine: {
     paddingVertical: spacing.md,

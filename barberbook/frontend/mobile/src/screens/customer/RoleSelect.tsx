@@ -18,13 +18,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon, Text, type IconName } from '../../components';
 import { useTheme } from '../../design/ThemeProvider';
 import { palette, radii, shadow, spacing } from '../../design/tokens';
-import type { OnboardingStackParamList } from '../../navigation/types';
-import { useAuthStore } from '../../store/useAuthStore';
+import type { OnboardingRole, OnboardingStackParamList } from '../../navigation/types';
 
 type Nav = NativeStackNavigationProp<OnboardingStackParamList, 'RoleSelect'>;
 
 interface RoleCard {
   key: 'customer' | 'owner' | 'staff';
+  role: OnboardingRole;
   bg: string;
   fg: string;
   accent: string;
@@ -32,25 +32,45 @@ interface RoleCard {
 }
 
 const CARDS: RoleCard[] = [
-  { key: 'customer', bg: palette.red, fg: palette.cream, accent: palette.cream, icon: 'scissors' },
-  { key: 'owner', bg: palette.navy, fg: palette.cream, accent: palette.gold, icon: 'pole' },
-  { key: 'staff', bg: palette.gold, fg: palette.ink, accent: palette.ink, icon: 'razor' },
+  {
+    key: 'customer',
+    role: 'Customer',
+    bg: palette.red,
+    fg: palette.cream,
+    accent: palette.cream,
+    icon: 'scissors',
+  },
+  {
+    key: 'owner',
+    role: 'Owner',
+    bg: palette.navy,
+    fg: palette.cream,
+    accent: palette.gold,
+    icon: 'pole',
+  },
+  {
+    key: 'staff',
+    role: 'Staff',
+    bg: palette.gold,
+    fg: palette.ink,
+    accent: palette.ink,
+    icon: 'razor',
+  },
 ];
 
 export function RoleSelect() {
   const nav = useNavigation<Nav>();
   const { t } = useTranslation();
   const { theme } = useTheme();
-  const setDevRole = useAuthStore((s) => s.setDevRole);
 
-  const onPick = (key: RoleCard['key']) => {
+  // Every role goes through the same phone-OTP login. The picked role is
+  // carried on the route and applied as the active workspace right after a
+  // successful verify (see OtpVerify). This replaces the old dev-only
+  // `setDevRole` shortcut, which was a no-op in release builds — the reason
+  // "Run a Shop" / "I'm a Barber" did nothing in the installed APK.
+  const onPick = (role: OnboardingRole) => {
     Haptics.selectionAsync().catch(() => {});
-    if (key === 'customer') {
-      nav.navigate('PhoneEntry');
-      return;
-    }
-    if (key === 'owner') setDevRole('Owner');
-    else setDevRole('Staff');
+    nav.navigate('PhoneEntry', { role });
   };
 
   return (
@@ -81,7 +101,7 @@ export function RoleSelect() {
               title={t(`role.${c.key}_title`)}
               subtitle={t(`role.${c.key}_sub`)}
               onPress={() => {
-                onPick(c.key);
+                onPick(c.role);
               }}
             />
           ))}

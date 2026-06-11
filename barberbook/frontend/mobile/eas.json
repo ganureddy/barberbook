@@ -26,7 +26,7 @@
       "env": {
         "EXPO_PUBLIC_CHANNEL": "dev",
         "EXPO_PUBLIC_MOCK": "1",
-        "EXPO_PUBLIC_FRAPPE_URL": "http://184.168.124.163"
+        "EXPO_PUBLIC_FRAPPE_URL": "https://ride.emrid.store"
       }
     },
     "preview": {
@@ -42,8 +42,8 @@
       },
       "env": {
         "EXPO_PUBLIC_CHANNEL": "preview",
-        "EXPO_PUBLIC_MOCK": "1",
-        "EXPO_PUBLIC_FRAPPE_URL": "http://184.168.124.163"
+        "EXPO_PUBLIC_MOCK": "0",
+        "EXPO_PUBLIC_FRAPPE_URL": "https://ride.emrid.store"
       }
     },
     "android-lifescc": {
@@ -55,8 +55,8 @@
       },
       "env": {
         "EXPO_PUBLIC_CHANNEL": "lifescc",
-        "EXPO_PUBLIC_MOCK": "1",
-        "EXPO_PUBLIC_FRAPPE_URL": "http://184.168.124.163"
+        "EXPO_PUBLIC_MOCK": "0",
+        "EXPO_PUBLIC_FRAPPE_URL": "https://ride.emrid.store"
       }
     },
     "production": {
@@ -72,7 +72,7 @@
       "env": {
         "EXPO_PUBLIC_CHANNEL": "production",
         "EXPO_PUBLIC_MOCK": "0",
-        "EXPO_PUBLIC_FRAPPE_URL": "http://184.168.124.163"
+        "EXPO_PUBLIC_FRAPPE_URL": "https://ride.emrid.store"
       }
     }
   },

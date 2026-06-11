@@ -4,7 +4,7 @@ import * as Haptics from 'expo-haptics';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -40,6 +40,7 @@ export function ShopDetail() {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
+  const { width: screenW } = useWindowDimensions();
   const shopQ = useShop(params.id);
 
   const [activeTab, setActiveTab] = useState<Tab>('menu');
@@ -95,7 +96,7 @@ export function ShopDetail() {
           {shop != null && (
             <ShopPhoto
               variant={shop.cover_variant}
-              width={400}
+              width={screenW}
               height={HERO_HEIGHT}
               radius={0}
               name={shop.shop_name.split(' ')[0]?.toUpperCase()}

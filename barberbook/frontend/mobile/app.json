@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "BarberBook",
-    "slug": "barberbook",
+    "slug": "barbarbook",
     "scheme": "barberbook",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -16,7 +16,26 @@
       "resizeMode": "contain",
       "backgroundColor": "#FAF7F2"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "android": {
+      "package": "app.barberbook.client",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#D4322C"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.INTERNET",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.VIBRATE",
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "app.barberbook.client",
@@ -25,25 +44,11 @@
         "NSLocationWhenInUseUsageDescription": "BarberBook uses your location to show nearby shops and live walk-in queues.",
         "NSCameraUsageDescription": "BarberBook uses the camera so you can attach photos to reviews and KYC documents.",
         "NSPhotoLibraryUsageDescription": "BarberBook uses your photos to upload review images and KYC documents.",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
       }
-    },
-    "android": {
-      "package": "app.barberbook.client",
-      "versionCode": 1,
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#D4322C"
-      },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false,
-      "permissions": [
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION",
-        "INTERNET",
-        "READ_EXTERNAL_STORAGE",
-        "VIBRATE"
-      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -64,6 +69,23 @@
         {
           "photosPermission": "BarberBook needs access to your photos so you can attach images to reviews."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#D4322C",
+          "defaultChannel": "default"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true,
+            "enableProguardInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
+        }
       ]
     ],
     "extra": {
@@ -71,13 +93,14 @@
         "siteUrlEnv": "EXPO_PUBLIC_FRAPPE_URL"
       },
       "eas": {
-        "projectId": "748cc12c-e156-46f6-a23a-910128f3e29f"
+        "projectId": "fc8c4ba3-5008-4928-967e-edcfb4cbfe34"
       }
     },
-    "owner": "ganureddylifes-organization",
     "updates": {
-      "url": "https://u.expo.dev/748cc12c-e156-46f6-a23a-910128f3e29f",
+      "enabled": false,
+      "url": "https://u.expo.dev/fc8c4ba3-5008-4928-967e-edcfb4cbfe34",
       "fallbackToCacheTimeout": 0
-    }
+    },
+    "owner": "ganureddy143"
   }
 }

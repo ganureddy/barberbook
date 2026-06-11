@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Haptics from 'expo-haptics';
 import { StatusBar } from 'expo-status-bar';
@@ -24,6 +24,7 @@ import { toast } from '../../lib/toast';
 import type { OnboardingStackParamList } from '../../navigation/types';
 
 type Nav = NativeStackNavigationProp<OnboardingStackParamList, 'PhoneEntry'>;
+type Rt = RouteProp<OnboardingStackParamList, 'PhoneEntry'>;
 
 const PREFIX = '+91';
 const PHONE_MAX_DIGITS = 10;
@@ -36,6 +37,7 @@ const PHONE_MAX_DIGITS = 10;
  */
 export function PhoneEntry() {
   const nav = useNavigation<Nav>();
+  const { params } = useRoute<Rt>();
   const { t } = useTranslation();
   const { theme } = useTheme();
   const [digits, setDigits] = useState('');
@@ -58,7 +60,7 @@ export function PhoneEntry() {
       return;
     }
     setSubmitting(false);
-    nav.navigate('OtpVerify', { phone: e164 });
+    nav.navigate('OtpVerify', { phone: e164, role: params?.role });
   };
 
   return (
