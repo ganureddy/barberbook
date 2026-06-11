@@ -3,7 +3,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   KeyboardAvoidingView,
@@ -66,6 +66,7 @@ export function OwnerSignup() {
   const [form, setForm] = useState<FormState>(INITIAL);
   const [geoBusy, setGeoBusy] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
+  const didAutoLocate = useRef(false);
 
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => {
     setForm((prev) => ({ ...prev, [k]: v }));
@@ -151,6 +152,35 @@ export function OwnerSignup() {
       setGeoBusy(false);
     }
   };
+
+  // On enrollment start: capture the shop's live location ONCE (GPS fix +
+  // OpenCage reverse geocode) so the pin + address are pre-filled. The owner
+  // can still fine-tune the pin on the map or edit the address manually. Runs
+  // quietly — if permission is denied we just leave the defaults for manual entry.
+  useEffect(() => {
+    if (didAutoLocate.current) return;
+    didAutoLocate.current = true;
+    (async () => {
+      try {
+        const perm = await Location.requestForegroundPermissionsAsync();
+        if (!perm.granted) return;
+        setGeoBusy(true);
+        const fix = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        const lat = fix.coords.latitude;
+        const lng = fix.coords.longitude;
+        set('latitude', lat);
+        set('longitude', lng);
+        await lookupAddress(lat, lng);
+      } catch {
+        // Non-fatal — manual map pin + address entry remain available.
+      } finally {
+        setGeoBusy(false);
+      }
+    })().catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const stepLabel = [
     'signup_step_basics',

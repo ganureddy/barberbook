@@ -36,7 +36,7 @@ const ITEMS: NotifItem[] = [
     receivedAt: 'Today · 10:30',
     unread: true,
     bookingId: 'BB-BKG-5001',
-    geo: { lat: 12.9719, lng: 77.6412, label: "Raj's Classic Cuts" },
+    geo: { lat: 11.2588, lng: 75.7804, label: "Raj's Classic Cuts" },
   },
   {
     id: 'n2',
@@ -45,7 +45,7 @@ const ITEMS: NotifItem[] = [
     body: 'Token BB-48-291 · Mon 18:20',
     receivedAt: 'Mon · 17:50',
     bookingId: 'BB-BKG-4900',
-    geo: { lat: 12.9356, lng: 77.6245, label: 'Pole & Pomade' },
+    geo: { lat: 11.279, lng: 75.785, label: 'Pole & Pomade' },
   },
   {
     id: 'n3',
