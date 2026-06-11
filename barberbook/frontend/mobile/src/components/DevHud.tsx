@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
   },
   anchor: {
     paddingTop: spacing.sm,
-    paddingRight: spacing.sm,
+    paddingEnd: spacing.sm,
     alignItems: 'flex-end',
   },
   badge: {

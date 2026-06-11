@@ -58,7 +58,7 @@ export function Showcase({ onClose }: Props) {
           </Text>
         </Pressable>
         {onClose != null && (
-          <Pressable onPress={onClose} style={[styles.modeBtn, { marginLeft: 8 }]} hitSlop={12}>
+          <Pressable onPress={onClose} style={[styles.modeBtn, { marginStart: 8 }]} hitSlop={12}>
             <Icon name="close" size={18} color={theme.text} />
           </Pressable>
         )}

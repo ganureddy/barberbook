@@ -27,7 +27,7 @@ export function Stars({
     const filled = value >= i + 1;
     const half = !filled && value >= i + 0.5;
     return (
-      <Svg key={i} width={size} height={size} viewBox="0 0 24 24" style={{ marginRight: 1 }}>
+      <Svg key={i} width={size} height={size} viewBox="0 0 24 24" style={{ marginEnd: 1 }}>
         <Path d={STAR_PATH} fill={emptyColor} />
         {(filled || half) && (
           <Path

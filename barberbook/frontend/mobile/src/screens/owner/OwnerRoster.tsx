@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
   },
   gridBody: {
     flexDirection: 'row',
-    paddingLeft: spacing.xl,
+    paddingStart: spacing.xl,
   },
   timeGutter: {
     width: TIME_GUTTER,
