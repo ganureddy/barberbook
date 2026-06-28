@@ -23,7 +23,7 @@ import { palette, radii, spacing } from '../../design/tokens';
 import { formatCurrency, formatShortDate } from '../../lib/format';
 import type { StaffStackParamList } from '../../navigation/types';
 
-import { ACTIVE_BARBER } from './_staff';
+import { useActiveBarber } from './_staff';
 
 type Rt = RouteProp<StaffStackParamList, 'StaffCustomer'>;
 
@@ -42,10 +42,11 @@ export function StaffCustomer() {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const { params } = useRoute<Rt>();
+  const activeBarber = useActiveBarber();
 
   const profileQ = useQuery<StaffCustomerProfile>({
-    queryKey: ['staff', 'customer', ACTIVE_BARBER, params.customerId],
-    queryFn: () => getStaffCustomerProfile(ACTIVE_BARBER, params.customerId),
+    queryKey: ['staff', 'customer', activeBarber, params.customerId],
+    queryFn: () => getStaffCustomerProfile(activeBarber, params.customerId),
   });
 
   const data = profileQ.data;

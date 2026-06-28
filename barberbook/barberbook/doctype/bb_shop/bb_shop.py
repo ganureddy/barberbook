@@ -6,10 +6,11 @@ from frappe.model.document import Document
 
 
 class BBShop(Document):
-    def autoname(self):
-        # Frappe handles the format: autoname above; only stub here so
-        # subclassing is straightforward later.
-        super().autoname()
+    # `autoname` is declared in the DocType JSON (`format:BBSHOP-{#####}` or
+    # similar). The base `Document` class does NOT expose an `autoname`
+    # method to call into via `super()` — Frappe applies the JSON-declared
+    # rule directly. Overriding the method here was the bug; we now leave
+    # the controller's autoname unimplemented so Frappe's default kicks in.
 
     def validate(self):
         # Default the slug from the shop name when missing.

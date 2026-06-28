@@ -7,10 +7,12 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useMyBarberWorkspaces } from '../../api/hooks';
 import { getStaffSchedule, type StaffSchedule as StaffScheduleData } from '../../api/resources';
 import type { Currency } from '../../api/types';
 import {
   Card,
+  Icon,
   KpiTile,
   ListRowSkeleton,
   SkeletonGroup,
@@ -18,6 +20,7 @@ import {
   Tag,
   Text,
 } from '../../components';
+import { LogoutButton } from '../../components/LogoutButton';
 import { useTheme } from '../../design/ThemeProvider';
 import { palette, radii, spacing } from '../../design/tokens';
 import { fontFamilies } from '../../design/typography';
@@ -25,7 +28,7 @@ import { formatCurrency, formatLocalTime } from '../../lib/format';
 import type { StaffStackParamList } from '../../navigation/types';
 import { useAuthStore } from '../../store/useAuthStore';
 
-import { ACTIVE_BARBER, fmtMinutes, timeOfDayKey } from './_staff';
+import { useActiveBarber, fmtMinutes, timeOfDayKey } from './_staff';
 
 type Nav = NativeStackNavigationProp<StaffStackParamList, 'StaffSchedule'>;
 
@@ -55,12 +58,15 @@ export function StaffSchedule() {
   const { theme } = useTheme();
   const nav = useNavigation<Nav>();
   const user = useAuthStore((s) => s.user);
+  const activeBarber = useActiveBarber();
+  const workspacesQ = useMyBarberWorkspaces(user?.phone);
+  const workspace = workspacesQ.data?.find((w) => w.barber === activeBarber);
   const days = useMemo(buildWeek, []);
   const [selectedDate, setSelectedDate] = useState(days[0].date);
 
   const scheduleQ = useQuery<StaffScheduleData>({
-    queryKey: ['staff', 'schedule', ACTIVE_BARBER, selectedDate],
-    queryFn: () => getStaffSchedule(ACTIVE_BARBER, selectedDate),
+    queryKey: ['staff', 'schedule', activeBarber, selectedDate],
+    queryFn: () => getStaffSchedule(activeBarber, selectedDate),
     refetchInterval: 60 * 1000,
   });
 
@@ -76,13 +82,29 @@ export function StaffSchedule() {
       <StatusBar style="auto" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Greeting */}
-        <View style={styles.greeting}>
-          <Text variant="labelSm" color={palette.gold}>
-            {t('staff.appointments_label').toUpperCase()}
-          </Text>
-          <Text variant="display" numberOfLines={2}>
-            {t(greetingKey, { name: firstName })}
-          </Text>
+        <View style={styles.greetingRow}>
+          <View style={styles.greeting}>
+            <Text variant="labelSm" color={palette.gold}>
+              {t('staff.appointments_label').toUpperCase()}
+            </Text>
+            <Text variant="display" numberOfLines={2}>
+              {t(greetingKey, { name: firstName })}
+            </Text>
+          </View>
+          <View style={styles.headerActions}>
+            <Pressable
+              onPress={() => {
+                // 'BarberShops' lives in the StaffRoot stack (an ancestor).
+                nav.getParent()?.navigate('BarberShops' as never);
+              }}
+              style={[styles.switchChip, { borderColor: theme.lineStrong }]}
+              accessibilityRole="button"
+              accessibilityLabel={t('staff.shops_switch')}
+            >
+              <Icon name="pole" size={14} color={palette.gold} />
+            </Pressable>
+            <LogoutButton />
+          </View>
         </View>
 
         {/* Today summary */}
@@ -107,6 +129,37 @@ export function StaffSchedule() {
             />
           </View>
         </Card>
+
+        {/* Your shift + profile — tap to edit (barbers manage their own). */}
+        {workspace != null && (
+          <Pressable
+            onPress={() => {
+              nav.navigate('StaffProfile');
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={t('staff.profile_title')}
+          >
+            <Card padded style={styles.shiftCard}>
+              <View style={styles.shiftHead}>
+                <Icon name="clock" size={16} color={palette.gold} />
+                <Text variant="labelSm" color={theme.muted} style={{ flex: 1 }}>
+                  {t('staff.shift_title', { shop: workspace.shop.shop_name }).toUpperCase()}
+                </Text>
+                <Text variant="labelSm" color={palette.red}>
+                  {t('staff.profile_edit').toUpperCase()}
+                </Text>
+                <Icon name="chevronRight" size={14} color={palette.red} />
+              </View>
+              <Text variant="bodyBold">
+                {(workspace.available_days ?? []).join(' · ') || t('staff.shift_unset')}
+              </Text>
+              <Text variant="caption" color={theme.muted}>
+                {workspace.shift_start ?? '—'}–{workspace.shift_end ?? '—'}
+                {workspace.specialties ? ` · ${workspace.specialties}` : ''}
+              </Text>
+            </Card>
+          </Pressable>
+        )}
 
         {/* 7-day strip */}
         <ScrollView
@@ -272,11 +325,40 @@ const styles = StyleSheet.create({
     paddingBottom: spacing['3xl'],
     gap: spacing.lg,
   },
+  greetingRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
   greeting: {
+    flex: 1,
     gap: 4,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  switchChip: {
+    width: 36,
+    height: 36,
+    borderRadius: radii.pill,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   summaryCard: {
     borderColor: palette.ink,
+  },
+  shiftCard: {
+    gap: 2,
+  },
+  shiftHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginBottom: 2,
   },
   summaryRow: {
     flexDirection: 'row',

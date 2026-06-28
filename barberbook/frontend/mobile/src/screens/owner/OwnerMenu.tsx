@@ -27,7 +27,7 @@ import { palette, radii, spacing } from '../../design/tokens';
 import { formatMoney } from '../../lib/booking';
 import type { MenuStackParamList } from '../../navigation/types';
 
-import { ACTIVE_SHOP } from './_owner';
+import { useActiveShop } from './_owner';
 
 type Nav = NativeStackNavigationProp<MenuStackParamList, 'OwnerMenu'>;
 
@@ -35,7 +35,8 @@ export function OwnerMenu() {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const nav = useNavigation<Nav>();
-  const servicesQ = useServicesForShop(ACTIVE_SHOP);
+  const shop = useActiveShop();
+  const servicesQ = useServicesForShop(shop);
 
   // Local working list — applies the optimistic reorder + active toggle
   // before round-tripping to the server. The actual `set_value` mutation

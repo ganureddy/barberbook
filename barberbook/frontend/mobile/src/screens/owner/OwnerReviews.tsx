@@ -25,14 +25,15 @@ import { palette, radii, spacing } from '../../design/tokens';
 import { fontFamilies } from '../../design/typography';
 import { toast } from '../../lib/toast';
 
-import { ACTIVE_SHOP } from './_owner';
+import { useActiveShop } from './_owner';
 
 type Filter = 'all' | 'needs_reply' | 'low';
 
 export function OwnerReviews() {
   const { t } = useTranslation();
   const { theme } = useTheme();
-  const reviewsQ = useReviewsForShop(ACTIVE_SHOP);
+  const shop = useActiveShop();
+  const reviewsQ = useReviewsForShop(shop);
   const [filter, setFilter] = useState<Filter>('all');
 
   const reviews = reviewsQ.data ?? [];

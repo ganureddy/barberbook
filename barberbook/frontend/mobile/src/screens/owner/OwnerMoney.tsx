@@ -21,15 +21,16 @@ import { palette, shadow, spacing } from '../../design/tokens';
 import { fontFamilies } from '../../design/typography';
 import { formatMoney } from '../../lib/booking';
 
-import { ACTIVE_SHOP } from './_owner';
+import { useActiveShop } from './_owner';
 
 export function OwnerMoney() {
   const { t } = useTranslation();
   const { theme } = useTheme();
+  const shop = useActiveShop();
 
   const summaryQ = useQuery<OwnerPayoutSummary>({
-    queryKey: ['owner', 'payouts', ACTIVE_SHOP],
-    queryFn: () => getOwnerPayoutSummary(ACTIVE_SHOP),
+    queryKey: ['owner', 'payouts', shop],
+    queryFn: () => getOwnerPayoutSummary(shop),
   });
   const data = summaryQ.data;
   const currency = (data?.currency ?? 'INR') as 'INR' | 'AED' | 'GBP';

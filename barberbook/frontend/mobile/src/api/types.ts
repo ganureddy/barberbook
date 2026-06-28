@@ -91,6 +91,10 @@ export interface Shop extends FrappeBaseDoc {
   phone?: string;
   /** ISO 4217. Drives money formatting client-side. */
   currency: Currency;
+  /** Hero/cover image URL (or local URI in mock mode). */
+  cover_image?: string;
+  /** Gallery image URLs. */
+  photos?: string[];
 }
 
 // ─── Service ────────────────────────────────────────────────────────────────
@@ -122,6 +126,11 @@ export interface Barber extends FrappeBaseDoc {
   rating_count: number;
   avatar_seed: string;
   is_active: 0 | 1;
+  phone?: string;
+  /** Optional per-shop weekly availability captured at onboarding. */
+  available_days?: DayOfWeek[];
+  shift_start?: string; // 'HH:mm'
+  shift_end?: string; // 'HH:mm'
 }
 
 // ─── Seat (chair) ───────────────────────────────────────────────────────────

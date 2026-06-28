@@ -29,39 +29,40 @@ import { palette, radii, spacing } from '../../design/tokens';
 import { fontFamilies } from '../../design/typography';
 import { toast } from '../../lib/toast';
 
-import { ACTIVE_SHOP } from './_owner';
-
-const QK = ['owner', 'walkin', ACTIVE_SHOP] as const;
+import { useActiveShop } from './_owner';
 
 export function OwnerWalkin() {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const qc = useQueryClient();
+  const shop = useActiveShop();
+  const QK = ['owner', 'walkin', shop] as const;
 
   const queueQ = useQuery<OwnerWalkinQueue>({
     queryKey: QK,
-    queryFn: () => getOwnerWalkinQueue(ACTIVE_SHOP),
+    queryFn: () => getOwnerWalkinQueue(shop),
     refetchInterval: 15 * 1000,
   });
 
   // Realtime: refetch the snapshot whenever a queue update arrives. Cheaper
   // than reconciling the local view against the channel payload.
-  const live = useChannel<unknown>(channels.walkinQueue(ACTIVE_SHOP));
+  const live = useChannel<unknown>(channels.walkinQueue(shop));
   useEffect(() => {
     if (live) {
       qc.invalidateQueries({ queryKey: QK }).catch(() => {});
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [live, qc]);
 
   const callMut = useMutation({
-    mutationFn: (ticketName: string) => callNextWalkin(ACTIVE_SHOP, ticketName),
+    mutationFn: (ticketName: string) => callNextWalkin(shop, ticketName),
     onSuccess: () => qc.invalidateQueries({ queryKey: QK }),
     onError: (err: unknown) =>
       toast.error(err instanceof Error ? err.message : 'Could not call ticket'),
   });
 
   const doneMut = useMutation({
-    mutationFn: (ticketName: string) => completeWalkin(ACTIVE_SHOP, ticketName),
+    mutationFn: (ticketName: string) => completeWalkin(shop, ticketName),
     onSuccess: () => qc.invalidateQueries({ queryKey: QK }),
     onError: (err: unknown) =>
       toast.error(err instanceof Error ? err.message : 'Could not complete ticket'),

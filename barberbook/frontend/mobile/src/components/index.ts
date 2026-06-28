@@ -14,6 +14,7 @@ export { DevHud } from './DevHud';
 export { OtpInput, type OtpInputProps, type OtpInputHandle } from './OtpInput';
 export { Confetti, type ConfettiProps } from './Confetti';
 export { EtaDonut, type EtaDonutProps } from './EtaDonut';
+export { RouteMap, type LatLng as RouteLatLng } from './RouteMap';
 export { PriceRangeSlider, type PriceRangeSliderProps } from './PriceRangeSlider';
 export {
   SkeletonLine,

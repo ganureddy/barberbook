@@ -26,6 +26,7 @@ import { initSentry } from './src/lib/sentry';
 import { RootNavigator, linking, navigationRef } from './src/navigation';
 import { useAuthStore } from './src/store/useAuthStore';
 import { useBookingDraftStore } from './src/store/useBookingDraftStore';
+import { useWorkspaceStore } from './src/store/useWorkspaceStore';
 
 // Boot-time, dependency-free initializers. Run in this order:
 // 1. Sentry first so any crash during the rest of init still ships.
@@ -71,13 +72,15 @@ function Root() {
   const { mode, theme } = useTheme();
 
   const hydrateDraft = useBookingDraftStore((s) => s.hydrate);
+  const hydrateWorkspace = useWorkspaceStore((s) => s.hydrate);
 
   useEffect(() => {
     hydrate().catch(() => {
       /* swallowed — auth hydration errors surface via toast */
     });
     hydrateDraft();
-  }, [hydrate, hydrateDraft]);
+    hydrateWorkspace();
+  }, [hydrate, hydrateDraft, hydrateWorkspace]);
 
   // Push notifications: register token + listen for taps. Both are
   // best-effort — the registerPush helper short-circuits on simulators

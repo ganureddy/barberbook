@@ -20,7 +20,7 @@ import { formatCurrency, formatLocalTime } from '../../lib/format';
 import { toast } from '../../lib/toast';
 import type { StaffStackParamList } from '../../navigation/types';
 
-import { ACTIVE_BARBER } from './_staff';
+import { useActiveBarber } from './_staff';
 
 type Nav = NativeStackNavigationProp<StaffStackParamList, 'StaffInService'>;
 
@@ -35,17 +35,17 @@ const QUICK_ACTIONS: QuickAction[] = [
   { id: 'swap', icon: 'pole' },
 ];
 
-const QK = ['staff', 'in_service', ACTIVE_BARBER] as const;
-
 export function StaffInService() {
   const { t } = useTranslation();
   const nav = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
+  const activeBarber = useActiveBarber();
+  const QK = ['staff', 'in_service', activeBarber] as const;
 
   const stateQ = useQuery<StaffInServiceState>({
     queryKey: QK,
-    queryFn: () => getStaffInService(ACTIVE_BARBER),
+    queryFn: () => getStaffInService(activeBarber),
     refetchInterval: 30 * 1000,
   });
 
@@ -73,7 +73,7 @@ export function StaffInService() {
   }, [booking, now, startedAt]);
 
   const completeMut = useMutation({
-    mutationFn: () => completeStaffService(ACTIVE_BARBER, booking?.name ?? ''),
+    mutationFn: () => completeStaffService(activeBarber, booking?.name ?? ''),
     onSuccess: () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       qc.invalidateQueries({ queryKey: ['staff'] }).catch(() => {});

@@ -1,7 +1,26 @@
 import { rpc, rpcGet } from '../client';
-import type { Booking, BookingStatus, Shop, WalkinTicket } from '../types';
+import type { Booking, BookingStatus, Currency, DayOfWeek, Shop, WalkinTicket } from '../types';
 
 // ─── Shop enrollment (owner onboarding) ─────────────────────────────────────
+
+/** A barber the owner adds while onboarding their shop. */
+export interface OnboardBarberDraft {
+  full_name: string;
+  specialties?: string;
+  years_experience?: number;
+  phone?: string;
+  available_days?: DayOfWeek[];
+  shift_start?: string; // 'HH:mm'
+  shift_end?: string; // 'HH:mm'
+}
+
+/** A menu item (service) the owner rolls out while onboarding their shop. */
+export interface OnboardServiceDraft {
+  service_name: string;
+  category?: string;
+  duration_minutes: number;
+  price: number;
+}
 
 export interface CreateShopInput {
   shop_name: string;
@@ -14,14 +33,43 @@ export interface CreateShopInput {
   longitude: number;
   open_time?: string;
   close_time?: string;
+  /** Hero/cover image URL or local URI. */
+  cover_image?: string;
+  /** Gallery image URLs/URIs. */
+  photos?: string[];
+  /** Number of chairs/seats to provision. */
+  seat_count?: number;
+  /** Barbers to create alongside the shop, each with a weekly schedule. */
+  barbers?: OnboardBarberDraft[];
+  /** Menu items (services) to roll out with the shop. */
+  services?: OnboardServiceDraft[];
 }
 
 /**
- * Enroll a new shop for the signed-in owner. The created shop immediately
- * becomes discoverable to customers (it lands in the shop list + map).
+ * Enroll a new shop for the signed-in owner, together with its photos,
+ * seats, roster of barbers and a menu of priced services. The created shop
+ * immediately becomes discoverable to customers (it lands in the shop list
+ * + map). Returns the freshly created Shop.
  */
 export function createShop(input: CreateShopInput): Promise<Shop> {
   return rpc<Shop>('barberbook.api.owner.create_shop', input);
+}
+
+// ─── My shops (owner home) ──────────────────────────────────────────────────
+
+/** A shop the signed-in owner runs, enriched with at-a-glance KPIs. */
+export interface MyShopSummary {
+  shop: Shop;
+  barber_count: number;
+  service_count: number;
+  bookings_today: number;
+  revenue_today: number;
+  currency: Currency;
+}
+
+/** List every shop owned by the signed-in user (newest first). */
+export function getMyShops(): Promise<MyShopSummary[]> {
+  return rpcGet<MyShopSummary[]>('barberbook.api.owner.my_shops');
 }
 
 // ─── KPIs + today's timeline ────────────────────────────────────────────────

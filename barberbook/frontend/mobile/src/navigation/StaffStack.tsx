@@ -1,6 +1,7 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 
+import { BarberProfile } from '../screens/staff/BarberProfile';
 import { StaffCustomer } from '../screens/staff/StaffCustomer';
 import { StaffEarnings } from '../screens/staff/StaffEarnings';
 import { StaffInService } from '../screens/staff/StaffInService';
@@ -44,6 +45,7 @@ export function StaffStack() {
         component={StaffEarnings}
         options={{ title: 'Earnings' }}
       />
+      <Stack.Screen name="StaffProfile" component={BarberProfile} options={{ title: 'Profile' }} />
     </Stack.Navigator>
   );
 }

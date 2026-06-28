@@ -1,9 +1,10 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { Chip, Icon } from '../../../components';
-import { palette, spacing } from '../../../design/tokens';
+import { useTheme } from '../../../design/ThemeProvider';
+import { palette, radii, spacing } from '../../../design/tokens';
 
 import type { DiscoveryFilterState } from './types';
 
@@ -13,19 +14,22 @@ interface Props {
 }
 
 /**
- * Horizontal scroll row of filter chips. Sticky on top of map / list, but
- * scrolls horizontally on narrow devices because Hindi labels can wrap wider
- * than English. Filter icon prefix is decorative — the filters live here, not
- * a separate sheet.
+ * Horizontal scroll row of filter chips. Each chip is a real toggle on
+ * `DiscoveryFilterState` (no decorative dead chips), so what you tap is what
+ * filters the list. Scrolls horizontally for longer (Hindi / Arabic) labels.
  */
 export function FilterRow({ state, onToggle }: Props) {
   const { t } = useTranslation();
+  const { theme } = useTheme();
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.row}
     >
+      <View style={[styles.iconBadge, { borderColor: theme.line, backgroundColor: theme.surface }]}>
+        <Icon name="filter" size={15} color={theme.muted} />
+      </View>
       <Chip
         label={t('discover.filters.open_now')}
         active={state.open_now}
@@ -49,8 +53,6 @@ export function FilterRow({ state, onToggle }: Props) {
           onToggle('highest_rated');
         }}
       />
-      <Chip label={t('discover.filters.beard')} onPress={() => {}} />
-      <Chip label={t('discover.filters.color')} onPress={() => {}} />
     </ScrollView>
   );
 }
@@ -69,5 +71,14 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
     gap: spacing.sm,
     flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: radii.pill,
+    borderWidth: StyleSheet.hairlineWidth * 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

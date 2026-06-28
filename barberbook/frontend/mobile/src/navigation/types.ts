@@ -29,8 +29,8 @@ export type OnboardingRole = Extract<UserRole, 'Customer' | 'Owner' | 'Staff'>;
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
   Customer: NavigatorScreenParams<CustomerTabsParamList>;
-  Owner: NavigatorScreenParams<OwnerTabsParamList>;
-  Staff: NavigatorScreenParams<StaffStackParamList>;
+  Owner: NavigatorScreenParams<OwnerRootStackParamList>;
+  Staff: NavigatorScreenParams<StaffRootStackParamList>;
   DevRoleSwitcher: undefined;
   DevShowcase: undefined;
 };
@@ -68,6 +68,7 @@ export type DiscoverStackParamList = {
   BookingPay: { shopId: string };
   BookingSuccess: { bookingId: string };
   RateExperience: { bookingId: string };
+  Directions: { bookingId: string };
 };
 
 export type BookingsStackParamList = {
@@ -77,6 +78,7 @@ export type BookingsStackParamList = {
 
 export type PassStackParamList = {
   BookingSuccess: { bookingId?: string };
+  Directions: { bookingId: string };
 };
 
 export type RewardsStackParamList = {
@@ -90,6 +92,17 @@ export type MeStackParamList = {
 };
 
 // ─── Owner ──────────────────────────────────────────────────────────────────
+
+/**
+ * Owner root: a shop picker + the comprehensive onboarding wizard wrap the
+ * tabbed dashboard. The gate (OwnerRoot) chooses the initial route based on
+ * how many shops the signed-in owner runs.
+ */
+export type OwnerRootStackParamList = {
+  OwnerShops: undefined;
+  OwnerOnboard: undefined;
+  OwnerHome: NavigatorScreenParams<OwnerTabsParamList>;
+};
 
 export type OwnerTabsParamList = {
   TodayTab: NavigatorScreenParams<TodayStackParamList>;
@@ -127,11 +140,23 @@ export type ShopStackParamList = {
 
 // ─── Staff ──────────────────────────────────────────────────────────────────
 
+/**
+ * Staff root: a shop picker + barber onboarding wizard wrap the schedule
+ * stack. A barber can work in more than one shop; the gate (StaffRoot)
+ * routes to onboarding when they aren't set up anywhere yet.
+ */
+export type StaffRootStackParamList = {
+  BarberShops: undefined;
+  BarberOnboard: undefined;
+  StaffHome: NavigatorScreenParams<StaffStackParamList>;
+};
+
 export type StaffStackParamList = {
   StaffSchedule: undefined;
   StaffInService: { bookingId?: string };
   StaffCustomer: { customerId: string };
   StaffEarnings: undefined;
+  StaffProfile: undefined;
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────

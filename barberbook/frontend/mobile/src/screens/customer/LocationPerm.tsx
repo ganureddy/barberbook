@@ -19,6 +19,7 @@ import Svg, { Circle, Defs, G, LinearGradient, Path, Rect, Stop } from 'react-na
 import { Button, Icon, Text } from '../../components';
 import { useTheme } from '../../design/ThemeProvider';
 import { palette, radii, shadow, spacing } from '../../design/tokens';
+import { locateMe } from '../../lib/locate';
 import { toast } from '../../lib/toast';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useLocationStore } from '../../store/useLocationStore';
@@ -33,7 +34,6 @@ export function LocationPerm() {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const setPermission = useLocationStore((s) => s.setPermission);
-  const setCoords = useLocationStore((s) => s.setCoords);
   const setDevRole = useAuthStore((s) => s.setDevRole);
   const status = useAuthStore((s) => s.status);
 
@@ -53,27 +53,12 @@ export function LocationPerm() {
   const handleAllow = async () => {
     Haptics.selectionAsync().catch(() => {});
     setRequesting(true);
-    setPermission('prompting');
     try {
-      const res = await Location.requestForegroundPermissionsAsync();
-      if (!res.granted) {
-        setPermission('denied');
+      // Grabs the GPS fix AND reverse-geocodes the city via OpenCage so the
+      // discovery feed can sort by real distance and show "where you are".
+      const res = await locateMe();
+      if (!res.ok) {
         toast.warn(t('location.denied_hint'));
-        finishOnboarding();
-        return;
-      }
-      setPermission('granted');
-      try {
-        const fix = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
-        setCoords({
-          latitude: fix.coords.latitude,
-          longitude: fix.coords.longitude,
-          accuracy: fix.coords.accuracy ?? undefined,
-        });
-      } catch {
-        // Ignore fix failure — we still have the fallback coords.
       }
       finishOnboarding();
     } catch (err) {

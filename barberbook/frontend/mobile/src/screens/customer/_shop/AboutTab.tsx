@@ -1,11 +1,11 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, View } from 'react-native';
 
 import { useShop } from '../../../api/hooks';
 import { Card, Divider, Icon, Text } from '../../../components';
 import { useTheme } from '../../../design/ThemeProvider';
-import { palette, spacing } from '../../../design/tokens';
+import { palette, radii, spacing } from '../../../design/tokens';
 
 interface Props {
   shopId: string;
@@ -19,8 +19,22 @@ export function AboutTab({ shopId }: Props) {
 
   if (!shop) return null;
 
+  const photos = shop.photos ?? (shop.cover_image ? [shop.cover_image] : []);
+
   return (
     <View style={styles.root}>
+      {photos.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.gallery}
+        >
+          {photos.map((uri) => (
+            <Image key={uri} source={{ uri }} style={styles.galleryPhoto} resizeMode="cover" />
+          ))}
+        </ScrollView>
+      )}
+
       <Card>
         <Row icon="pin" label={t('shop.about_address')}>
           <Text variant="body">{shop.address_line}</Text>
@@ -77,6 +91,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.lg,
     gap: spacing.md,
+  },
+  gallery: {
+    gap: spacing.sm,
+    paddingBottom: spacing.xs,
+  },
+  galleryPhoto: {
+    width: 160,
+    height: 120,
+    borderRadius: radii.md,
   },
   row: {
     flexDirection: 'row',

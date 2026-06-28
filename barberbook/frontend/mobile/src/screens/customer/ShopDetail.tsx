@@ -2,9 +2,18 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Haptics from 'expo-haptics';
 import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import {
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -44,6 +53,7 @@ export function ShopDetail() {
   const shopQ = useShop(params.id);
 
   const [activeTab, setActiveTab] = useState<Tab>('menu');
+  const [heroPage, setHeroPage] = useState(0);
   const draftServiceCount = useBookingDraftStore((s) => s.services.length);
   const startForShop = useBookingDraftStore((s) => s.startForShop);
 
@@ -79,6 +89,16 @@ export function ShopDetail() {
   }));
 
   const shop = shopQ.data;
+  const photos = useMemo(() => {
+    if (!shop) return [];
+    if (shop.photos && shop.photos.length > 0) return shop.photos;
+    return shop.cover_image ? [shop.cover_image] : [];
+  }, [shop]);
+
+  const onHeroScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const page = Math.round(e.nativeEvent.contentOffset.x / Math.max(1, screenW));
+    setHeroPage(page);
+  };
 
   return (
     <View style={[styles.root, { backgroundColor: theme.bg }]}>
@@ -93,16 +113,50 @@ export function ShopDetail() {
       >
         {/* HERO */}
         <Animated.View style={[styles.hero, heroStyle]}>
-          {shop != null && (
-            <ShopPhoto
-              variant={shop.cover_variant}
-              width={screenW}
-              height={HERO_HEIGHT}
-              radius={0}
-              name={shop.shop_name.split(' ')[0]?.toUpperCase()}
-            />
+          {photos.length > 0 ? (
+            <>
+              <ScrollView
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                onScroll={onHeroScroll}
+                scrollEventThrottle={16}
+              >
+                {photos.map((uri) => (
+                  <Image
+                    key={uri}
+                    source={{ uri }}
+                    style={{ width: screenW, height: HERO_HEIGHT }}
+                    resizeMode="cover"
+                  />
+                ))}
+              </ScrollView>
+              {photos.length > 1 && (
+                <View style={styles.heroDots} pointerEvents="none">
+                  {photos.map((uri, i) => (
+                    <View
+                      key={uri}
+                      style={[
+                        styles.heroDot,
+                        { opacity: i === heroPage ? 1 : 0.4, width: i === heroPage ? 18 : 6 },
+                      ]}
+                    />
+                  ))}
+                </View>
+              )}
+            </>
+          ) : (
+            shop != null && (
+              <ShopPhoto
+                variant={shop.cover_variant}
+                width={screenW}
+                height={HERO_HEIGHT}
+                radius={0}
+                name={shop.shop_name.split(' ')[0]?.toUpperCase()}
+              />
+            )
           )}
-          <View style={styles.heroScrim} />
+          <View style={styles.heroScrim} pointerEvents="none" />
           <SafeAreaView edges={['top', 'left', 'right']} style={styles.heroOverlay}>
             <Pressable
               onPress={() => {
@@ -241,6 +295,18 @@ const styles = StyleSheet.create({
   heroScrim: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(14,14,16,0.18)',
+  },
+  heroDots: {
+    position: 'absolute',
+    bottom: spacing.md,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    gap: 5,
+  },
+  heroDot: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: palette.cream,
   },
   heroOverlay: {
     ...StyleSheet.absoluteFillObject,

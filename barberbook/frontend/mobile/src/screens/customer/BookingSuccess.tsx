@@ -175,6 +175,20 @@ export function BookingSuccess() {
         </ScrollView>
 
         <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.md }]}>
+          {bookingId != null && (
+            <Button
+              block
+              size="lg"
+              variant="gold"
+              label={t('booking.success_directions')}
+              leading={<Icon name="pin" size={16} color={palette.ink} />}
+              onPress={() => {
+                Haptics.selectionAsync().catch(() => {});
+                nav.navigate('Directions', { bookingId });
+              }}
+              style={{ marginBottom: spacing.sm }}
+            />
+          )}
           <View style={{ flexDirection: 'row', gap: spacing.sm }}>
             <View style={{ flex: 1 }}>
               <Button

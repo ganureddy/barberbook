@@ -7,8 +7,8 @@ import { useAuthStore } from '../store/useAuthStore';
 
 import { CustomerTabs } from './CustomerTabs';
 import { OnboardingStack } from './OnboardingStack';
-import { OwnerTabs } from './OwnerTabs';
-import { StaffStack } from './StaffStack';
+import { OwnerRoot } from './OwnerRoot';
+import { StaffRoot } from './StaffRoot';
 import type { RootStackParamList } from './types';
 
 const Root = createNativeStackNavigator<RootStackParamList>();
@@ -48,9 +48,9 @@ export function RootNavigator() {
       {status !== 'authenticated' || !role ? (
         <Root.Screen name="Onboarding" component={OnboardingStack} />
       ) : role === 'Owner' ? (
-        <Root.Screen name="Owner" component={OwnerTabs} />
+        <Root.Screen name="Owner" component={OwnerRoot} />
       ) : role === 'Staff' ? (
-        <Root.Screen name="Staff" component={StaffStack} />
+        <Root.Screen name="Staff" component={StaffRoot} />
       ) : (
         <Root.Screen name="Customer" component={CustomerTabs} />
       )}

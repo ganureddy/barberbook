@@ -18,6 +18,8 @@ import { setSessionId } from '../api/client';
 import { clearActiveRole, loadActiveRole, saveActiveRole } from '../api/secureSession';
 import type { SessionUser, UserRole } from '../api/types';
 
+import { useWorkspaceStore } from './useWorkspaceStore';
+
 interface AuthStore {
   status: 'idle' | 'hydrating' | 'authenticated' | 'unauthenticated';
   user: SessionUser | null;
@@ -27,6 +29,8 @@ interface AuthStore {
   hydrate: () => Promise<void>;
   setSession: (user: SessionUser, sid: string) => void;
   setActiveRole: (role: UserRole) => void;
+  /** Update just the display name (e.g. when a barber claims a pre-made record). */
+  setProfileName: (fullName: string) => void;
   logout: () => Promise<void>;
 
   /**
@@ -64,12 +68,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       return;
     }
 
-    // Honour the workspace the user last picked (Customer / Owner / Staff),
-    // even if the backend's role list doesn't include it yet — the app lets
-    // users choose their workspace at onboarding, and we don't want a
-    // returning owner/barber bounced back to the role picker on every launch.
-    // Falls back to the backend's active role / first role for fresh logins.
-    const activeRole = storedRole ?? user.active_role ?? user.roles[0] ?? null;
+    const activeRole =
+      storedRole && user.roles.includes(storedRole)
+        ? storedRole
+        : (user.active_role ?? user.roles[0] ?? null);
 
     set({
       status: 'authenticated',
@@ -96,9 +98,18 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     set({ activeRole: role });
   },
 
+  setProfileName(fullName) {
+    const name = fullName.trim();
+    if (!name) return;
+    const user = get().user;
+    if (!user || user.full_name === name) return;
+    set({ user: { ...user, full_name: name } });
+  },
+
   async logout() {
     await logoutApi();
     clearActiveRole();
+    useWorkspaceStore.getState().resetWorkspace();
     set({
       status: 'unauthenticated',
       user: null,

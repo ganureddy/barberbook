@@ -30,7 +30,7 @@ import {
 import { toast } from '../../lib/toast';
 import type { ShopStackParamList } from '../../navigation/types';
 
-import { ACTIVE_SHOP } from './_owner';
+import { useActiveShop } from './_owner';
 
 type Nav = NativeStackNavigationProp<ShopStackParamList, 'OwnerKYC'>;
 type DocState = 'missing' | 'pending' | 'approved' | 'rejected';
@@ -73,6 +73,7 @@ export function OwnerKYC() {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const nav = useNavigation<Nav>();
+  const shop = useActiveShop();
   const [slots, setSlots] = useState<SlotMap>(INITIAL);
 
   const setSlot = (id: DocSlot['id'], next: Partial<SlotState>) => {
@@ -134,7 +135,7 @@ export function OwnerKYC() {
     setSlot(id, { state: 'pending', uploading: true, preview: file.uri, error: undefined });
     try {
       const remote = await uploadFile(file, {
-        attachTo: { doctype: 'BB Shop', name: ACTIVE_SHOP, field: id },
+        attachTo: { doctype: 'BB Shop', name: shop, field: id },
         isPrivate: true,
       });
       setSlot(id, { uploading: false, remoteFile: remote });

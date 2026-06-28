@@ -18,12 +18,13 @@ import {
   StatusPill,
   Text,
 } from '../../components';
+import { LogoutButton } from '../../components/LogoutButton';
 import { useTheme } from '../../design/ThemeProvider';
 import { palette, radii, spacing } from '../../design/tokens';
 import { formatMoney } from '../../lib/booking';
 import type { TodayStackParamList } from '../../navigation/types';
 
-import { ACTIVE_SHOP } from './_owner';
+import { useActiveShop } from './_owner';
 
 type Filter = 'all' | 'upcoming' | 'active' | 'done' | 'cancelled';
 type Nav = NativeStackNavigationProp<TodayStackParamList, 'OwnerToday'>;
@@ -32,11 +33,12 @@ export function OwnerToday() {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const nav = useNavigation<Nav>();
+  const shop = useActiveShop();
   const [filter, setFilter] = useState<Filter>('all');
 
   const todayQ = useQuery<OwnerTodayKpis>({
-    queryKey: ['owner', 'today', ACTIVE_SHOP],
-    queryFn: () => getOwnerToday(ACTIVE_SHOP),
+    queryKey: ['owner', 'today', shop],
+    queryFn: () => getOwnerToday(shop),
     staleTime: 60 * 1000,
     refetchInterval: 60 * 1000,
   });
@@ -70,19 +72,39 @@ export function OwnerToday() {
         kicker={(data?.date ?? new Date().toISOString().slice(0, 10)).toUpperCase()}
         title={t('owner.today_title')}
         trailing={
-          <Pressable
-            onPress={() => {
-              nav.navigate('OwnerWalkin');
-            }}
-            style={[styles.headerCta, { backgroundColor: palette.red }]}
-            accessibilityRole="button"
-            accessibilityLabel={t('owner.walkin_title')}
-          >
-            <Icon name="pole" size={14} color={palette.cream} />
-            <Text variant="label" color={palette.cream}>
-              {t('owner.walkin_title').toUpperCase()}
-            </Text>
-          </Pressable>
+          <View style={styles.headerActions}>
+            <Pressable
+              onPress={() => {
+                // 'OwnerShops' lives in the OwnerRoot stack (an ancestor).
+                nav
+                  .getParent()
+                  ?.getParent()
+                  ?.navigate('OwnerShops' as never);
+              }}
+              style={[styles.headerCta, { backgroundColor: palette.navy }]}
+              accessibilityRole="button"
+              accessibilityLabel={t('owner.shops_switch')}
+            >
+              <Icon name="pole" size={14} color={palette.cream} />
+              <Text variant="label" color={palette.cream}>
+                {t('owner.shops_switch').toUpperCase()}
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                nav.navigate('OwnerWalkin');
+              }}
+              style={[styles.headerCta, { backgroundColor: palette.red }]}
+              accessibilityRole="button"
+              accessibilityLabel={t('owner.walkin_title')}
+            >
+              <Icon name="pole" size={14} color={palette.cream} />
+              <Text variant="label" color={palette.cream}>
+                {t('owner.walkin_title').toUpperCase()}
+              </Text>
+            </Pressable>
+            <LogoutButton />
+          </View>
         }
       />
 
@@ -216,6 +238,11 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     paddingBottom: spacing['3xl'],
     gap: spacing.lg,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
   headerCta: {
     flexDirection: 'row',

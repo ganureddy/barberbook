@@ -10,6 +10,7 @@ import { BookingPay } from '../screens/customer/BookingPay';
 import { BookingServices } from '../screens/customer/BookingServices';
 import { BookingSuccess } from '../screens/customer/BookingSuccess';
 import { BookingTime } from '../screens/customer/BookingTime';
+import { Directions } from '../screens/customer/Directions';
 import { DiscoveryList } from '../screens/customer/DiscoveryList';
 import { DiscoveryMap } from '../screens/customer/DiscoveryMap';
 import { FiltersSheet } from '../screens/customer/FiltersSheet';
@@ -87,6 +88,7 @@ function DiscoverStack() {
         component={RateExperience}
         options={{ title: 'Rate' }}
       />
+      <Discover.Screen name="Directions" component={Directions} options={{ title: 'Route' }} />
     </Discover.Navigator>
   );
 }
@@ -110,6 +112,7 @@ function PassStack() {
   return (
     <Pass.Navigator screenOptions={{ headerShown: false }}>
       <Pass.Screen name="BookingSuccess" component={BookingSuccess} />
+      <Pass.Screen name="Directions" component={Directions} />
     </Pass.Navigator>
   );
 }

@@ -6,7 +6,8 @@
  "engine": "InnoDB",
  "field_order": [
   "barber_name", "shop", "user", "phone", "rating", "rating_count",
-  "specialties", "headline", "is_active", "avatar_seed", "primary_seat"
+  "specialties", "headline", "is_active", "avatar_seed", "primary_seat",
+  "available_days", "shift_start", "shift_end"
  ],
  "fields": [
   {"fieldname": "barber_name", "fieldtype": "Data", "label": "Name", "reqd": 1, "in_list_view": 1},
@@ -19,7 +20,10 @@
   {"fieldname": "headline", "fieldtype": "Data", "label": "Headline"},
   {"fieldname": "is_active", "fieldtype": "Check", "default": "1", "label": "Active", "in_list_view": 1},
   {"fieldname": "avatar_seed", "fieldtype": "Data", "label": "Avatar Seed"},
-  {"fieldname": "primary_seat", "fieldtype": "Link", "options": "BB Seat", "label": "Primary Seat"}
+  {"fieldname": "primary_seat", "fieldtype": "Link", "options": "BB Seat", "label": "Primary Seat"},
+  {"fieldname": "available_days", "fieldtype": "Data", "label": "Available Days"},
+  {"fieldname": "shift_start", "fieldtype": "Data", "label": "Shift Start"},
+  {"fieldname": "shift_end", "fieldtype": "Data", "label": "Shift End"}
  ],
  "modified": "2026-05-16 00:00:00.000000",
  "modified_by": "Administrator",

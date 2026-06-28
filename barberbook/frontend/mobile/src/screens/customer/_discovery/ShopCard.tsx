@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 
 import type { NearbyShop } from '../../../api/resources';
 import { Card, ShopPhoto, Stars, Tag, Text } from '../../../components';
@@ -25,6 +25,8 @@ export function ShopCard({ shop, onPress, compact = false }: Props) {
   const { t } = useTranslation();
 
   const tier = '₹'.repeat(shop.price_tier);
+  const cover = shop.cover_image ?? shop.photos?.[0];
+  const thumbSize = compact ? 72 : 96;
 
   return (
     <Pressable
@@ -38,13 +40,21 @@ export function ShopCard({ shop, onPress, compact = false }: Props) {
     >
       <Card padded={false} style={styles.card}>
         <View style={styles.row}>
-          <ShopPhoto
-            variant={shop.cover_variant}
-            width={compact ? 72 : 96}
-            height={compact ? 72 : 96}
-            radius={radii.md}
-            name={shop.shop_name.split(' ')[0]?.toUpperCase()}
-          />
+          {cover ? (
+            <Image
+              source={{ uri: cover }}
+              style={{ width: thumbSize, height: thumbSize, borderRadius: radii.md }}
+              resizeMode="cover"
+            />
+          ) : (
+            <ShopPhoto
+              variant={shop.cover_variant}
+              width={thumbSize}
+              height={thumbSize}
+              radius={radii.md}
+              name={shop.shop_name.split(' ')[0]?.toUpperCase()}
+            />
+          )}
 
           <View style={styles.copy}>
             <View style={styles.tagRow}>

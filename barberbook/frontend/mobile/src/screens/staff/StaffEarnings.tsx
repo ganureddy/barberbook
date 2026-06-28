@@ -14,15 +14,16 @@ import { palette, radii, shadow, spacing } from '../../design/tokens';
 import { fontFamilies } from '../../design/typography';
 import { formatCurrency, formatLocalTime, formatShortDate } from '../../lib/format';
 
-import { ACTIVE_BARBER } from './_staff';
+import { useActiveBarber } from './_staff';
 
 export function StaffEarnings() {
   const { t } = useTranslation();
   const { theme } = useTheme();
+  const activeBarber = useActiveBarber();
 
   const earningsQ = useQuery<StaffEarningsT>({
-    queryKey: ['staff', 'earnings', ACTIVE_BARBER],
-    queryFn: () => getStaffEarnings(ACTIVE_BARBER),
+    queryKey: ['staff', 'earnings', activeBarber],
+    queryFn: () => getStaffEarnings(activeBarber),
   });
   const data = earningsQ.data;
   const currency = (data?.currency ?? 'INR') as Currency;

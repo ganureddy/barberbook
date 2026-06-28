@@ -81,26 +81,32 @@ export const linking: LinkingOptions<RootStackParamList> = {
       Owner: {
         path: 'owner',
         screens: {
-          TodayTab: { screens: { OwnerToday: 'today', OwnerWalkin: 'today/walkin' } },
-          RosterTab: {
+          OwnerShops: 'shops',
+          OwnerOnboard: 'onboard',
+          OwnerHome: {
             screens: {
-              OwnerRoster: 'roster',
-              OwnerRosterConflict: 'roster/conflict',
-              OwnerSeats: 'seats',
-            },
-          },
-          MenuTab: {
-            screens: {
-              OwnerMenu: 'menu',
-              OwnerAddService: 'menu/service/:serviceName?',
-            },
-          },
-          MoneyTab: { screens: { OwnerMoney: 'money' } },
-          ShopTab: {
-            screens: {
-              OwnerReviews: 'reviews',
-              OwnerSignup: 'signup',
-              OwnerKYC: 'kyc',
+              TodayTab: { screens: { OwnerToday: 'today', OwnerWalkin: 'today/walkin' } },
+              RosterTab: {
+                screens: {
+                  OwnerRoster: 'roster',
+                  OwnerRosterConflict: 'roster/conflict',
+                  OwnerSeats: 'seats',
+                },
+              },
+              MenuTab: {
+                screens: {
+                  OwnerMenu: 'menu',
+                  OwnerAddService: 'menu/service/:serviceName?',
+                },
+              },
+              MoneyTab: { screens: { OwnerMoney: 'money' } },
+              ShopTab: {
+                screens: {
+                  OwnerReviews: 'reviews',
+                  OwnerSignup: 'signup',
+                  OwnerKYC: 'kyc',
+                },
+              },
             },
           },
         },
@@ -108,10 +114,16 @@ export const linking: LinkingOptions<RootStackParamList> = {
       Staff: {
         path: 'staff',
         screens: {
-          StaffSchedule: 'schedule',
-          StaffInService: 'in-service/:bookingId?',
-          StaffCustomer: 'customer/:customerId',
-          StaffEarnings: 'earnings',
+          BarberShops: 'shops',
+          BarberOnboard: 'onboard',
+          StaffHome: {
+            screens: {
+              StaffSchedule: 'schedule',
+              StaffInService: 'in-service/:bookingId?',
+              StaffCustomer: 'customer/:customerId',
+              StaffEarnings: 'earnings',
+            },
+          },
         },
       },
       DevRoleSwitcher: 'dev/role-switcher',

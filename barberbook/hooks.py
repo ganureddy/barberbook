@@ -50,6 +50,24 @@ doc_events = {
 }
 
 # ---------------------------------------------------------------------------
+# Row-level data scoping (data security)
+# ---------------------------------------------------------------------------
+# Booking / walk-in / payment rows belong to the shop. These hooks restrict
+# every list query and single-doc read so one shop's operational + financial
+# data is never visible to another shop's owner, to barbers outside the shop,
+# or to other customers. See barberbook/permissions.py.
+permission_query_conditions = {
+    "BB Booking": "barberbook.permissions.booking_query_conditions",
+    "BB Walkin Ticket": "barberbook.permissions.walkin_query_conditions",
+    "BB Payment": "barberbook.permissions.payment_query_conditions",
+}
+has_permission = {
+    "BB Booking": "barberbook.permissions.booking_has_permission",
+    "BB Walkin Ticket": "barberbook.permissions.walkin_has_permission",
+    "BB Payment": "barberbook.permissions.payment_has_permission",
+}
+
+# ---------------------------------------------------------------------------
 # Scheduled tasks
 # ---------------------------------------------------------------------------
 scheduler_events = {

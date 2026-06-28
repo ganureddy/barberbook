@@ -43,6 +43,8 @@ export {
   type RegisterDeviceResult,
 } from './push';
 export {
+  createShop,
+  getMyShops,
   getOwnerToday,
   getOwnerWalkinQueue,
   callNextWalkin,
@@ -50,6 +52,10 @@ export {
   getOwnerPayoutSummary,
   draftReviewResponse,
   setBookingStatus,
+  type CreateShopInput,
+  type OnboardBarberDraft,
+  type OnboardServiceDraft,
+  type MyShopSummary,
   type OwnerTodayKpis,
   type OwnerWalkinQueue,
   type OwnerPayoutSummary,
@@ -57,11 +63,17 @@ export {
   type DraftResponseResult,
 } from './owner';
 export {
+  onboardBarber,
+  getMyBarberWorkspaces,
+  updateBarberProfile,
   getStaffSchedule,
   getStaffInService,
   completeStaffService,
   getStaffCustomerProfile,
   getStaffEarnings,
+  type BarberOnboardInput,
+  type BarberWorkspace,
+  type BarberProfileUpdate,
   type StaffSchedule,
   type StaffScheduleEntry,
   type StaffInServiceState,

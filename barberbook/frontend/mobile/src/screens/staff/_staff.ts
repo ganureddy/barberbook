@@ -1,9 +1,24 @@
+import { useWorkspaceStore } from '../../store/useWorkspaceStore';
+
 /**
- * Active barber id. In a real session this comes from
- * `useAuthStore.user.staff_link → BB Barber.name`; for the scaffold we
- * pin to the canvas's first fixture so every staff screen has data.
+ * Fallback barber id (first canvas fixture) used only when the barber hasn't
+ * picked a workspace yet.
  */
 export const ACTIVE_BARBER = 'BB-BAR-2001';
+
+/**
+ * The BB Barber row the staff user is currently operating as. A barber can
+ * work in multiple shops (one BB Barber row each); the selection lives in
+ * `useWorkspaceStore` and is chosen on the BarberShops picker.
+ */
+export function useActiveBarber(): string {
+  return useWorkspaceStore((s) => s.activeBarberId) ?? ACTIVE_BARBER;
+}
+
+/** The shop the active barber row belongs to. */
+export function useActiveWorkShop(): string | null {
+  return useWorkspaceStore((s) => s.activeWorkShopId);
+}
 
 /** Pretty-prints minutes as "Xh Ym". */
 export function fmtMinutes(min: number): string {

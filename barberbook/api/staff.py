@@ -8,12 +8,223 @@ StaffCustomer, StaffEarnings.
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 
 import frappe
 from frappe import _
 
-from ._utils import require_role
+from ._utils import normalize_phone, require_role
+from .owner import _as_list, _ensure_role, serialize_shop
+
+
+def _barber_workspace(barber_name: str) -> dict:
+    """Build the mobile `BarberWorkspace` shape for a BB Barber row."""
+    barber = frappe.db.get_value(
+        "BB Barber",
+        barber_name,
+        ["name", "shop", "barber_name", "specialties", "available_days", "shift_start", "shift_end"],
+        as_dict=True,
+    )
+    shop_row = frappe.db.get_value(
+        "BB Shop",
+        barber.shop,
+        [
+            "name",
+            "shop_name",
+            "slug",
+            "owner_user",
+            "status",
+            "country",
+            "city",
+            "address_line",
+            "pincode",
+            "latitude",
+            "longitude",
+            "rating",
+            "rating_count",
+            "price_tier",
+            "is_open",
+            "accepts_walkin",
+            "cover_variant",
+            "open_time",
+            "close_time",
+            "phone",
+            "currency",
+        ],
+        as_dict=True,
+    )
+
+    today_dt = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    end_dt = today_dt + timedelta(days=1)
+    bookings_today = frappe.db.count(
+        "BB Booking",
+        {
+            "barber": barber_name,
+            "scheduled_at": ("between", [today_dt, end_dt]),
+            "status": ("not in", ["Cancelled", "NoShow"]),
+        },
+    )
+    return {
+        "barber": barber.name,
+        "barber_name": barber.barber_name or "",
+        "specialties": barber.specialties or "",
+        "available_days": (barber.available_days or "").split(",") if barber.available_days else [],
+        "shift_start": barber.shift_start or None,
+        "shift_end": barber.shift_end or None,
+        "shop": serialize_shop(shop_row) if shop_row else {"name": barber.shop},
+        "bookings_today": bookings_today,
+        "tips_today": 0,
+        "currency": (shop_row.currency if shop_row else "INR") or "INR",
+    }
+
+
+@frappe.whitelist()
+def onboard(**kwargs) -> list[dict]:
+    """Create/link the signed-in user as a barber across one or more shops.
+
+    A barber can work in multiple shops; we create one BB Barber row per
+    shop, all linked to the same User. Grants the Barber Staff role.
+    """
+    user = frappe.session.user
+    if user in ("Guest", None):
+        frappe.throw(_("Login required."))
+
+    full_name = (kwargs.get("full_name") or "").strip()
+    if not full_name:
+        frappe.throw(_("Your name is required."))
+
+    shop_ids = [s for s in _as_list(kwargs.get("shop_ids")) if s]
+    if not shop_ids:
+        frappe.throw(_("Select at least one shop."))
+
+    _ensure_role(user, "Barber Staff")
+
+    created: list[str] = []
+    for shop_id in shop_ids:
+        if not frappe.db.exists("BB Shop", shop_id):
+            continue
+        # Don't duplicate an existing link for this (user, shop).
+        existing = frappe.db.get_value("BB Barber", {"user": user, "shop": shop_id}, "name")
+        if existing:
+            created.append(existing)
+            continue
+        days = kwargs.get("available_days")
+        doc = frappe.get_doc(
+            {
+                "doctype": "BB Barber",
+                "shop": shop_id,
+                "user": user,
+                "barber_name": full_name,
+                "phone": kwargs.get("phone") or None,
+                "specialties": kwargs.get("specialties") or None,
+                "avatar_seed": kwargs.get("avatar_seed") or full_name.lower(),
+                "is_active": 1,
+                "available_days": ",".join(days) if isinstance(days, list) else (days or None),
+                "shift_start": kwargs.get("shift_start") or None,
+                "shift_end": kwargs.get("shift_end") or None,
+            }
+        )
+        doc.insert(ignore_permissions=True)
+        created.append(doc.name)
+
+    frappe.db.commit()
+    return [_barber_workspace(name) for name in created]
+
+
+@frappe.whitelist()
+def update_profile(**kwargs) -> list[dict]:
+    """Update the signed-in barber's own profile.
+
+    Personal fields (name, specialties, experience, phone, avatar) are applied
+    to every BB Barber record the user owns; the weekly schedule (days/shift)
+    is per-shop and only updates the record named in `barber`. The Frappe User
+    display name is kept in sync. Returns the refreshed workspaces.
+    """
+    user = frappe.session.user
+    if user in ("Guest", None):
+        frappe.throw(_("Login required."))
+
+    rows = frappe.get_all("BB Barber", filters={"user": user}, fields=["name"])
+    if not rows:
+        frappe.throw(_("No barber profile is linked to your account."))
+
+    full_name = (kwargs.get("full_name") or "").strip()
+    days = kwargs.get("available_days")
+    days_str = ",".join(days) if isinstance(days, list) else (days or None)
+    target = kwargs.get("barber")
+
+    for row in rows:
+        doc = frappe.get_doc("BB Barber", row["name"])
+        # Personal fields — applied to all of the barber's shop records.
+        if full_name:
+            doc.barber_name = full_name
+        if kwargs.get("specialties") is not None:
+            doc.specialties = kwargs.get("specialties")
+        if kwargs.get("phone") is not None:
+            doc.phone = kwargs.get("phone")
+        if kwargs.get("avatar_seed"):
+            doc.avatar_seed = kwargs.get("avatar_seed")
+        # Schedule — only the targeted shop record.
+        if target and row["name"] == target:
+            if days_str is not None:
+                doc.available_days = days_str
+            if kwargs.get("shift_start") is not None:
+                doc.shift_start = kwargs.get("shift_start")
+            if kwargs.get("shift_end") is not None:
+                doc.shift_end = kwargs.get("shift_end")
+        doc.save(ignore_permissions=True)
+
+    # Keep the User display name in sync with the barber name.
+    if full_name:
+        user_doc = frappe.get_doc("User", user)
+        user_doc.first_name = full_name
+        user_doc.last_name = ""
+        user_doc.save(ignore_permissions=True)
+
+    frappe.db.commit()
+    return [_barber_workspace(r["name"]) for r in rows]
+
+
+@frappe.whitelist()
+def my_shops(phone: str | None = None) -> list[dict]:
+    """Every shop the signed-in barber works in.
+
+    Also claims any BB Barber records a shop owner pre-created for this
+    barber's phone number (during shop onboarding) but never linked to a
+    user — so a barber sees their shops the first time they log in.
+    """
+    user = frappe.session.user
+    if user in ("Guest", None):
+        return []
+
+    # Resolve the phone to match on: prefer the explicit arg, else the User's.
+    user_doc = frappe.get_doc("User", user)
+    match_phone = normalize_phone(phone or user_doc.phone or user_doc.mobile_no)
+
+    if match_phone:
+        unclaimed = frappe.get_all(
+            "BB Barber",
+            filters={"user": ["in", ["", None]]},
+            fields=["name", "phone", "barber_name"],
+        )
+        claimed_name = None
+        for row in unclaimed:
+            if normalize_phone(row.get("phone")) == match_phone:
+                frappe.db.set_value("BB Barber", row["name"], "user", user)
+                claimed_name = claimed_name or row.get("barber_name")
+        # Adopt the owner-entered barber name onto the User if it's still the
+        # default placeholder created at OTP signup, so the staff app greets
+        # the barber correctly.
+        if claimed_name and (user_doc.first_name in (None, "", "BarberBook")):
+            user_doc.first_name = claimed_name
+            user_doc.last_name = ""
+            user_doc.save(ignore_permissions=True)
+        frappe.db.commit()
+
+    rows = frappe.get_all(
+        "BB Barber", filters={"user": user}, fields=["name"], order_by="creation desc"
+    )
+    return [_barber_workspace(r["name"]) for r in rows]
 
 
 def _resolve_barber() -> str:

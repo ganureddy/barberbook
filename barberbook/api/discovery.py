@@ -125,13 +125,18 @@ def _fetch_via_bounding_box(
     lat_delta = radius_km / 111.0
     lng_delta = radius_km / (111.0 * max(0.05, math.cos(math.radians(lat))))
 
-    filters = {
-        "status": "Active",
-        "latitude": ("between", [lat - lat_delta, lat + lat_delta]),
-        "longitude": ("between", [lng - lng_delta, lng + lng_delta]),
-    }
+    # Frappe's dict-filter `("between", [a, b])` shape generates malformed SQL
+    # on MariaDB for Float columns in some versions, so split into pairwise
+    # `>=` / `<=` filters which always produce valid SQL.
+    filters: list[list] = [
+        ["status", "=", "Active"],
+        ["latitude", ">=", lat - lat_delta],
+        ["latitude", "<=", lat + lat_delta],
+        ["longitude", ">=", lng - lng_delta],
+        ["longitude", "<=", lng + lng_delta],
+    ]
     if country:
-        filters["country"] = country
+        filters.append(["country", "=", country])
 
     fields = [
         "name",

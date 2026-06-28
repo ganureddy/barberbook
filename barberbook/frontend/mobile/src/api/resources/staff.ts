@@ -1,5 +1,79 @@
 import { rpc, rpcGet } from '../client';
-import type { Booking, BookingStatus } from '../types';
+import type { Booking, BookingStatus, Currency, DayOfWeek, Shop } from '../types';
+
+// ─── Barber onboarding (multi-shop) ─────────────────────────────────────────
+
+export interface BarberOnboardInput {
+  full_name: string;
+  specialties?: string;
+  years_experience?: number;
+  phone?: string;
+  avatar_seed?: string;
+  /** Shops (BB Shop.name) the barber wants to work in. */
+  shop_ids: string[];
+  /** Weekly availability applied to each shop. */
+  available_days?: DayOfWeek[];
+  shift_start?: string; // 'HH:mm'
+  shift_end?: string; // 'HH:mm'
+}
+
+/** One shop a barber works in (a BB Barber row joined to its BB Shop). */
+export interface BarberWorkspace {
+  /** BB Barber.name for this shop. */
+  barber: string;
+  /** Display name on the barber record (as set by the owner / barber). */
+  barber_name: string;
+  /** Comma-separated specialties from the record. */
+  specialties?: string;
+  /** Weekly working days the owner/barber set for this shop. */
+  available_days?: DayOfWeek[];
+  shift_start?: string; // 'HH:mm'
+  shift_end?: string; // 'HH:mm'
+  shop: Shop;
+  bookings_today: number;
+  tips_today: number;
+  currency: Currency;
+}
+
+/**
+ * Create/link the signed-in user as a barber across one or more shops.
+ * Returns the resulting list of workspaces.
+ */
+export function onboardBarber(input: BarberOnboardInput): Promise<BarberWorkspace[]> {
+  return rpc<BarberWorkspace[]>('barberbook.api.staff.onboard', input);
+}
+
+/**
+ * List every shop the signed-in barber works in. Pass the barber's login
+ * phone so the backend can also surface (and claim) any barber records a
+ * shop owner pre-created for that number during shop onboarding.
+ */
+export function getMyBarberWorkspaces(phone?: string): Promise<BarberWorkspace[]> {
+  return rpcGet<BarberWorkspace[]>('barberbook.api.staff.my_shops', phone ? { phone } : undefined);
+}
+
+/**
+ * Update the signed-in barber's own profile. Personal fields (name,
+ * specialties, experience, phone, photo) apply across every shop the barber
+ * works in; the weekly schedule (days/shift) is per-shop and only updates the
+ * record named in `barber`. Returns the refreshed list of workspaces.
+ */
+export interface BarberProfileUpdate {
+  full_name?: string;
+  phone?: string;
+  specialties?: string;
+  years_experience?: number;
+  avatar_seed?: string;
+  /** The specific BB Barber record (shop) whose schedule is being edited. */
+  barber?: string;
+  available_days?: DayOfWeek[];
+  shift_start?: string;
+  shift_end?: string;
+}
+
+export function updateBarberProfile(input: BarberProfileUpdate): Promise<BarberWorkspace[]> {
+  return rpc<BarberWorkspace[]>('barberbook.api.staff.update_profile', input);
+}
 
 // ─── Staff schedule ────────────────────────────────────────────────────────
 

@@ -1,15 +1,17 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import * as Haptics from 'expo-haptics';
 import { StatusBar } from 'expo-status-bar';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useNearbyShops } from '../../api/hooks';
 import { Icon, ShopCardSkeleton, SkeletonGroup, Text } from '../../components';
 import { useTheme } from '../../design/ThemeProvider';
-import { radii, spacing } from '../../design/tokens';
+import { palette, radii, spacing } from '../../design/tokens';
+import { locateMe } from '../../lib/locate';
 import type { DiscoverStackParamList } from '../../navigation/types';
 import { useLocationStore } from '../../store/useLocationStore';
 
@@ -25,14 +27,41 @@ export function DiscoveryList() {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const loc = useLocationStore((s) => s.current);
+  const isFallback = useLocationStore((s) => s.isFallback);
+  const permission = useLocationStore((s) => s.permission);
   const { sort, filters, setSort, toggleFilter } = useDiscoveryControls();
+  const [locating, setLocating] = useState(false);
 
   const shopsQ = useNearbyShops({
     latitude: loc.latitude,
     longitude: loc.longitude,
-    radius_km: 8,
-    limit: 25,
+    radius_km: 25,
+    limit: 50,
   });
+
+  const refresh = async () => {
+    Haptics.selectionAsync().catch(() => {});
+    setLocating(true);
+    try {
+      await locateMe();
+      await shopsQ.refetch();
+    } catch {
+      /* keep last-known coords */
+    } finally {
+      setLocating(false);
+    }
+  };
+
+  // On first open with only fallback coords, try to get the real fix once so
+  // the feed is genuinely "near you" rather than the default city centre.
+  const didAutoLocate = useRef(false);
+  useEffect(() => {
+    if (didAutoLocate.current) return;
+    if (!isFallback || permission === 'denied') return;
+    didAutoLocate.current = true;
+    refresh().catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const visible = useMemo(
     () => applyDiscovery(shopsQ.data ?? [], sort, filters),
@@ -48,9 +77,23 @@ export function DiscoveryList() {
 
       <View style={[styles.header, { borderBottomColor: theme.line }]}>
         <View style={{ flex: 1 }}>
-          <Text variant="labelSm" color={theme.muted}>
-            {(loc.city ?? 'Around you').toUpperCase()}
-          </Text>
+          <Pressable
+            onPress={() => {
+              refresh().catch(() => {});
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={t('discover.locate_me')}
+            style={styles.cityRow}
+          >
+            {locating ? (
+              <ActivityIndicator size="small" color={palette.red} />
+            ) : (
+              <Icon name="pin" size={13} color={palette.red} />
+            )}
+            <Text variant="labelSm" color={theme.muted}>
+              {(loc.city ?? 'Around you').toUpperCase()}
+            </Text>
+          </Pressable>
           <Text variant="display" style={{ marginTop: 2 }}>
             {t('discover.header_title')}
           </Text>
@@ -126,6 +169,11 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth * 2,
     gap: spacing.md,
+  },
+  cityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
   },
   viewToggle: {
     flexDirection: 'row',

@@ -57,6 +57,14 @@ export const qk = {
     all: ['loyalty'] as const,
     forShop: (shop: string) => [...qk.loyalty.all, 'shop', shop] as const,
   },
+  owner: {
+    all: ['owner'] as const,
+    myShops: () => [...qk.owner.all, 'my-shops'] as const,
+  },
+  staff: {
+    all: ['staff'] as const,
+    workspaces: (phone?: string) => [...qk.staff.all, 'workspaces', phone ?? ''] as const,
+  },
 } as const;
 
 /** Bucket lat/lng to ~110m so tiny GPS jitter doesn't spawn new cache keys. */

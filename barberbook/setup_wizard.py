@@ -116,39 +116,72 @@ def _ensure_role(role: str) -> None:
         frappe.get_doc({"doctype": "Role", "role_name": role, "desk_access": 0}).insert(ignore_permissions=True)
 
 
+# BB Shop / BB Service / BB Barber DocTypes use `autoname:"format:..."`,
+# which means any explicit `name` we pass is overwritten by Frappe. To
+# keep the seeder idempotent we look up an existing record by `slug` (for
+# shops) or by `service_name` + `shop` / `barber_name` + `shop` (children).
+
 def _ensure_shop(spec: dict) -> str:
-    name = spec["name"]
-    if frappe.db.exists("BB Shop", name):
-        doc = frappe.get_doc("BB Shop", name)
+    """Create or update a demo shop. Returns the actual `doc.name`
+    Frappe assigned (e.g. 'BBSHOP-0001'), regardless of the `name` key
+    provided in `spec` (which is just a stable handle for the seeder)."""
+    spec = dict(spec)
+    spec.pop("name", None)  # ignored by autoname, drop to avoid noise.
+    slug = spec["slug"]
+    existing = frappe.db.get_value("BB Shop", {"slug": slug}, "name")
+    if existing:
+        doc = frappe.get_doc("BB Shop", existing)
         doc.update(spec)
         doc.save(ignore_permissions=True)
-        return name
-    doc = frappe.get_doc({"doctype": "BB Shop", **spec, "status": "Active", "is_open": 1, "accepts_walkin": 1, "open_time": "10:00:00", "close_time": "21:00:00"})
+        return doc.name
+    doc = frappe.get_doc(
+        {
+            "doctype": "BB Shop",
+            **spec,
+            "status": "Active",
+            "is_open": 1,
+            "accepts_walkin": 1,
+            "open_time": "10:00:00",
+            "close_time": "21:00:00",
+        }
+    )
     doc.insert(ignore_permissions=True)
-    return name
+    return doc.name
 
 
-def _ensure_service(spec: dict) -> None:
-    name = spec.pop("name")
+def _ensure_service(spec: dict, shop_id: str) -> None:
+    spec = dict(spec)
+    spec.pop("name", None)
+    spec["shop"] = shop_id
     body = {"doctype": "BB Service", "currency": "INR", "is_active": 1, **spec}
-    if frappe.db.exists("BB Service", name):
-        doc = frappe.get_doc("BB Service", name)
+    existing = frappe.db.get_value(
+        "BB Service",
+        {"shop": shop_id, "service_name": spec["service_name"]},
+        "name",
+    )
+    if existing:
+        doc = frappe.get_doc("BB Service", existing)
         doc.update(body)
         doc.save(ignore_permissions=True)
     else:
-        body["name"] = name
         frappe.get_doc(body).insert(ignore_permissions=True)
 
 
-def _ensure_barber(spec: dict) -> None:
-    name = spec.pop("name")
+def _ensure_barber(spec: dict, shop_id: str) -> None:
+    spec = dict(spec)
+    spec.pop("name", None)
+    spec["shop"] = shop_id
     body = {"doctype": "BB Barber", "is_active": 1, **spec}
-    if frappe.db.exists("BB Barber", name):
-        doc = frappe.get_doc("BB Barber", name)
+    existing = frappe.db.get_value(
+        "BB Barber",
+        {"shop": shop_id, "barber_name": spec["barber_name"]},
+        "name",
+    )
+    if existing:
+        doc = frappe.get_doc("BB Barber", existing)
         doc.update(body)
         doc.save(ignore_permissions=True)
     else:
-        body["name"] = name
         frappe.get_doc(body).insert(ignore_permissions=True)
 
 
@@ -157,14 +190,20 @@ def seed_demo_india() -> dict:
     for role in ("Customer", "Shop Owner", "Barber Staff"):
         _ensure_role(role)
 
+    # Map the stable seed handles ("BBSHOP-DEMO-MUM") to the actual
+    # docnames Frappe assigns ("BBSHOP-0001"), so children can link to
+    # the correct row.
+    handle_to_name: dict[str, str] = {}
     for shop in DEMO_SHOPS:
-        _ensure_shop(dict(shop))
+        handle_to_name[shop["name"]] = _ensure_shop(shop)
 
     for svc in DEMO_SERVICES:
-        _ensure_service(dict(svc))
+        shop_id = handle_to_name[svc["shop"]]
+        _ensure_service(svc, shop_id)
 
     for barber in DEMO_BARBERS:
-        _ensure_barber(dict(barber))
+        shop_id = handle_to_name[barber["shop"]]
+        _ensure_barber(barber, shop_id)
 
     frappe.db.commit()
     return {

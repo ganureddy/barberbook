@@ -16,7 +16,7 @@ import { useTheme } from '../../design/ThemeProvider';
 import { palette, radii, spacing } from '../../design/tokens';
 import type { RosterStackParamList } from '../../navigation/types';
 
-import { ACTIVE_SHOP } from './_owner';
+import { useActiveShop } from './_owner';
 
 type Nav = NativeStackNavigationProp<RosterStackParamList, 'OwnerRoster'>;
 
@@ -46,7 +46,8 @@ export function OwnerRoster() {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const nav = useNavigation<Nav>();
-  const barbersQ = useBarbersForShop(ACTIVE_SHOP);
+  const shop = useActiveShop();
+  const barbersQ = useBarbersForShop(shop);
   const barbers = barbersQ.data ?? [];
 
   const [activeDay, setActiveDay] = useState<DayOfWeek>('Mon');

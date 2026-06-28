@@ -19,7 +19,7 @@ import {
 import { useTheme } from '../../design/ThemeProvider';
 import { palette, radii, shadow, spacing } from '../../design/tokens';
 
-import { ACTIVE_SHOP } from './_owner';
+import { useActiveShop } from './_owner';
 
 type SeatStatus = 'OPEN' | 'IN_SERVICE' | 'BREAK' | 'OFF';
 
@@ -50,9 +50,10 @@ const STATUS_BG: Record<SeatStatus, string> = {
 export function OwnerSeats() {
   const { t } = useTranslation();
   const { theme } = useTheme();
-  const seatsQ = useSeatsForShop(ACTIVE_SHOP);
-  const barbersQ = useBarbersForShop(ACTIVE_SHOP);
-  const walkinQ = useWalkinSnapshot(ACTIVE_SHOP);
+  const shop = useActiveShop();
+  const seatsQ = useSeatsForShop(shop);
+  const barbersQ = useBarbersForShop(shop);
+  const walkinQ = useWalkinSnapshot(shop);
 
   // Compose a deterministic floor map: every seat fixture gets a status
   // derived from the walkin queue + barber roster. In production these

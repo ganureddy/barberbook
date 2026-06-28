@@ -77,6 +77,16 @@ def haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
     return round(earth_r * 2 * math.asin(math.sqrt(a)), 2)
 
 
+def normalize_phone(value: str | None) -> str:
+    """Significant-digits form of a phone number for matching.
+
+    Strips spaces / punctuation / country prefix and keeps the last 10
+    digits, so `+91 98000 00000` and `9800000000` compare equal.
+    """
+    digits = "".join(ch for ch in (value or "") if ch.isdigit())
+    return digits[-10:] if len(digits) > 10 else digits
+
+
 def fingerprint(value: str) -> str:
     """Stable non-cryptographic fingerprint. Used for de-duping (e.g. push
     tokens) without storing the raw value in the cache key."""

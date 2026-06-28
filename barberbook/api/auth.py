@@ -181,11 +181,17 @@ def _phone_to_email(phone: str) -> str:
 
 
 def _start_session(user) -> str:
-    """Open a Frappe session for `user` and return the sid."""
-    from frappe.auth import LoginManager
+    """Open a Frappe session for `user` and return the sid.
 
-    lm = LoginManager()
-    lm.login_as(user.name)
+    We MUST go through `frappe.local.login_manager` rather than a fresh
+    `LoginManager()` instance — Frappe's response middleware reads from
+    the request-bound login_manager when stamping the `sid` cookie at the
+    end of the request. A new LoginManager instance writes the Sessions
+    row but leaves the response cookie as `sid=Guest`, so the mobile
+    client never receives a usable session.
+    """
+    frappe.local.login_manager.user = user.name
+    frappe.local.login_manager.post_login()
     return frappe.session.sid
 
 

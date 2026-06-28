@@ -33,8 +33,8 @@ export function DiscoveryMap() {
   const shopsQ = useNearbyShops({
     latitude: loc.latitude,
     longitude: loc.longitude,
-    radius_km: 8,
-    limit: 25,
+    radius_km: 25,
+    limit: 50,
   });
 
   const visible = useMemo(

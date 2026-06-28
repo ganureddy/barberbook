@@ -21,10 +21,13 @@ import {
   bookingRepo,
   cancelWalkinTicket,
   createBooking,
+  createShop,
   findNearbyShops,
   getAvailability,
   getCurrentRoster,
+  getMyBarberWorkspaces,
   getMyLoyaltyForShop,
+  getMyShops,
   getWalkinSnapshot,
   joinWalkinQueue,
   listBarbersForShop,
@@ -32,13 +35,20 @@ import {
   listReviewsForShop,
   listSeatsForShop,
   listServicesForShop,
+  onboardBarber,
+  updateBarberProfile,
   redeemPoints,
   shopRepo,
   submitReview,
   updateBookingStatus,
   type AvailabilitySlot,
+  type BarberOnboardInput,
+  type BarberProfileUpdate,
+  type BarberWorkspace,
   type CreateBookingPayload,
+  type CreateShopInput,
   type JoinWalkinPayload,
+  type MyShopSummary,
   type NearbyParams,
   type NearbyShop,
   type RedeemPayload,
@@ -281,5 +291,68 @@ export function useRedeemPoints(): UseMutationResult<RedeemResult, Error, Redeem
   return useMutation({
     mutationFn: redeemPoints,
     onSuccess: (r) => qc.invalidateQueries({ queryKey: qk.loyalty.forShop(r.account.shop) }),
+  });
+}
+
+// ─── Owner: my shops + onboarding ───────────────────────────────────────────
+
+export function useMyShops(): UseQueryResult<MyShopSummary[]> {
+  return useQuery({
+    queryKey: qk.owner.myShops(),
+    queryFn: getMyShops,
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useCreateShop(): UseMutationResult<Shop, Error, CreateShopInput> {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: createShop,
+    onSuccess: (shop) => {
+      qc.invalidateQueries({ queryKey: qk.owner.myShops() }).catch(() => {});
+      qc.invalidateQueries({ queryKey: qk.shops.all }).catch(() => {});
+      qc.invalidateQueries({ queryKey: qk.services.forShop(shop.name) }).catch(() => {});
+      qc.invalidateQueries({ queryKey: qk.barbers.forShop(shop.name) }).catch(() => {});
+    },
+  });
+}
+
+// ─── Staff: my workspaces + onboarding ──────────────────────────────────────
+
+export function useMyBarberWorkspaces(phone?: string): UseQueryResult<BarberWorkspace[]> {
+  return useQuery({
+    queryKey: qk.staff.workspaces(phone),
+    queryFn: () => getMyBarberWorkspaces(phone),
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useOnboardBarber(): UseMutationResult<
+  BarberWorkspace[],
+  Error,
+  BarberOnboardInput
+> {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: onboardBarber,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.staff.workspaces() }).catch(() => {});
+      qc.invalidateQueries({ queryKey: qk.barbers.all }).catch(() => {});
+    },
+  });
+}
+
+export function useUpdateBarberProfile(): UseMutationResult<
+  BarberWorkspace[],
+  Error,
+  BarberProfileUpdate
+> {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: updateBarberProfile,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.staff.all }).catch(() => {});
+      qc.invalidateQueries({ queryKey: qk.barbers.all }).catch(() => {});
+    },
   });
 }

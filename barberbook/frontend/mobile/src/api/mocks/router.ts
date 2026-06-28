@@ -9,9 +9,12 @@
 
 import type { AxiosRequestConfig, AxiosResponse } from 'axios';
 
+import { normalizePhone } from '../../lib/phone';
 import { channels, publishLocal } from '../realtime';
 import type {
+  Barber,
   Booking,
+  DayOfWeek,
   FrappeBaseDoc,
   ListParams,
   Review,
@@ -385,10 +388,12 @@ export function routeMock(config: AxiosRequestConfig): AxiosResponse | null {
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-|-$/g, '');
+    const shopName = `BB-SHOP-${String(10000 + idx)}`;
+    const photos = Array.isArray(b.photos) ? (b.photos as string[]) : [];
     const shop: Shop = {
       ...baseAuditMock(),
       doctype: 'BB Shop',
-      name: `BB-SHOP-${String(10000 + idx)}`,
+      name: shopName,
       shop_name: name,
       slug,
       owner_user: MOCK_USER.email,
@@ -409,9 +414,92 @@ export function routeMock(config: AxiosRequestConfig): AxiosResponse | null {
       close_time: String(b.close_time ?? '21:00:00'),
       phone: String(b.phone ?? ''),
       currency: 'INR',
+      cover_image: (b.cover_image as string | undefined) ?? photos[0],
+      photos,
     };
     SHOPS.push(shop);
+
+    // Provision seats.
+    const seatCount = Math.max(0, Number(b.seat_count ?? 0));
+    for (let i = 1; i <= seatCount; i++) {
+      SEATS.push({
+        ...baseAuditMock(),
+        doctype: 'BB Seat',
+        name: `MOCK-SEAT-${shopName}-${i}`,
+        shop: shopName,
+        seat_number: i,
+        label: `Seat ${i}`,
+        is_active: 1,
+      });
+    }
+
+    // Provision barbers with their weekly schedule.
+    const barberDrafts = Array.isArray(b.barbers) ? (b.barbers as Record<string, unknown>[]) : [];
+    barberDrafts.forEach((draft, i) => {
+      const fullName = String(draft.full_name ?? `Barber ${i + 1}`).trim();
+      BARBERS.push({
+        ...baseAuditMock(),
+        doctype: 'BB Barber',
+        name: `MOCK-BAR-${shopName}-${i + 1}`,
+        shop: shopName,
+        full_name: fullName,
+        short_name: shortName(fullName),
+        initials: initialsOf(fullName),
+        specialties: String(draft.specialties ?? ''),
+        years_experience: Number(draft.years_experience ?? 0),
+        rating: 0,
+        rating_count: 0,
+        avatar_seed: fullName.toLowerCase(),
+        is_active: 1,
+        phone: draft.phone as string | undefined,
+        available_days: (draft.available_days as DayOfWeek[] | undefined) ?? undefined,
+        shift_start: draft.shift_start as string | undefined,
+        shift_end: draft.shift_end as string | undefined,
+      });
+    });
+
+    // Roll out the menu of services.
+    const serviceDrafts = Array.isArray(b.services)
+      ? (b.services as Record<string, unknown>[])
+      : [];
+    serviceDrafts.forEach((draft, i) => {
+      SERVICES.push({
+        ...baseAuditMock(),
+        doctype: 'BB Service',
+        name: `MOCK-SVC-${shopName}-${i + 1}`,
+        shop: shopName,
+        service_name: String(draft.service_name ?? `Service ${i + 1}`),
+        category: String(draft.category ?? 'Hair'),
+        duration_minutes: Number(draft.duration_minutes ?? 30),
+        price: Number(draft.price ?? 0),
+        currency: 'INR',
+        is_active: 1,
+      });
+    });
+
     return ok({ message: shop }, config);
+  }
+
+  if (url.endsWith('/api/method/barberbook.api.owner.my_shops')) {
+    const mine = SHOPS.filter((s) => s.owner_user === MOCK_USER.email);
+    const summaries = mine
+      .slice()
+      .reverse()
+      .map((s) => {
+        const bookings = BOOKINGS.filter((bk) => bk.shop === s.name);
+        const revenue = bookings
+          .filter((bk) => bk.status === 'Completed')
+          .reduce((sum, bk) => sum + (bk.total_amount ?? 0), 0);
+        return {
+          shop: s,
+          barber_count: BARBERS.filter((bar) => bar.shop === s.name).length,
+          service_count: SERVICES.filter((sv) => sv.shop === s.name).length,
+          bookings_today: bookings.length,
+          revenue_today: revenue,
+          currency: s.currency,
+        };
+      });
+    return ok({ message: summaries }, config);
   }
 
   if (url.endsWith('/api/method/barberbook.api.owner.today')) {
@@ -431,19 +519,17 @@ export function routeMock(config: AxiosRequestConfig): AxiosResponse | null {
       customer_name: 'Arya Nair',
       service_summary: `${b.services.length} service${b.services.length === 1 ? '' : 's'}`,
     }));
-    // Pad timeline so the UI has something to render even before bookings exist.
-    const padded = timeline.length > 0 ? timeline : padTimelineForShop(shopId);
     return ok(
       {
         message: {
           shop: shopId,
           date: new Date().toISOString().slice(0, 10),
-          bookings: padded.length,
+          bookings: timeline.length,
           walkins: WALKIN_TICKETS.filter((t) => t.shop === shopId && t.status !== 'Cancelled')
             .length,
-          revenue: revenue || 4280,
+          revenue,
           currency: 'INR',
-          timeline: padded,
+          timeline,
         },
       },
       config,
@@ -530,15 +616,18 @@ export function routeMock(config: AxiosRequestConfig): AxiosResponse | null {
     const merged = { ...params, ...(body ?? {}) } as Record<string, unknown>;
     const shopId = String(merged.shop ?? '');
     const today = new Date();
+    const completed = BOOKINGS.filter((b) => b.shop === shopId && b.status === 'Completed');
+
+    // Real daily series from completed bookings over the last 30 days.
     const daily = Array.from({ length: 30 }, (_, i) => {
       const d = new Date(today);
       d.setDate(today.getDate() - (29 - i));
-      // Deterministic but uneven series so the chart reads as real data.
-      const seed = (d.getDay() + 2) * 137;
+      const key = d.toISOString().slice(0, 10);
+      const dayBookings = completed.filter((b) => b.scheduled_at.slice(0, 10) === key);
       return {
-        date: d.toISOString().slice(0, 10),
-        amount: 1800 + ((seed * 7) % 4200),
-        bookings: 6 + ((seed * 3) % 18),
+        date: key,
+        amount: dayBookings.reduce((s, b) => s + (b.total_amount ?? 0), 0),
+        bookings: dayBookings.length,
       };
     });
     const monthRevenue = daily.reduce((s, d) => s + d.amount, 0);
@@ -548,22 +637,11 @@ export function routeMock(config: AxiosRequestConfig): AxiosResponse | null {
           shop: shopId,
           currency: 'INR',
           pending_amount: Math.round(monthRevenue * 0.18),
-          next_payout_at: new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+          next_payout_at:
+            monthRevenue > 0 ? new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString() : null,
           daily,
-          top_services: [
-            { service_name: "Men's Haircut", amount: Math.round(monthRevenue * 0.42), count: 184 },
-            { service_name: 'Beard Trim', amount: Math.round(monthRevenue * 0.21), count: 132 },
-            { service_name: 'Combo', amount: Math.round(monthRevenue * 0.18), count: 86 },
-            { service_name: 'Hot Towel Shave', amount: Math.round(monthRevenue * 0.12), count: 48 },
-            { service_name: 'Color', amount: Math.round(monthRevenue * 0.07), count: 22 },
-          ],
-          payouts: Array.from({ length: 8 }, (_, i) => ({
-            name: `MOCK-PE-${i + 1}`,
-            amount: 18000 + i * 2400,
-            posted_at: new Date(today.getTime() - (i + 1) * 7 * 24 * 60 * 60 * 1000).toISOString(),
-            status: i === 0 ? ('pending' as const) : ('settled' as const),
-            bank_ref: `UTR2026${(i + 1).toString().padStart(4, '0')}`,
-          })),
+          top_services: [],
+          payouts: [],
         },
       },
       config,
@@ -571,74 +649,103 @@ export function routeMock(config: AxiosRequestConfig): AxiosResponse | null {
   }
 
   // ─── Staff endpoints ───────────────────────────────────────────────
+  if (url.endsWith('/api/method/barberbook.api.staff.onboard')) {
+    const b = body ?? {};
+    const fullName = String(b.full_name ?? 'New Barber').trim() || 'New Barber';
+    const shopIds = Array.isArray(b.shop_ids) ? (b.shop_ids as string[]) : [];
+    const created: Barber[] = shopIds.map((shopId, i) => {
+      const barber: Barber = {
+        ...baseAuditMock(),
+        doctype: 'BB Barber',
+        name: `MOCK-BAR-ME-${Date.now()}-${i}`,
+        shop: shopId,
+        user: MOCK_USER.email,
+        full_name: fullName,
+        short_name: shortName(fullName),
+        initials: initialsOf(fullName),
+        specialties: String(b.specialties ?? ''),
+        years_experience: Number(b.years_experience ?? 0),
+        rating: 0,
+        rating_count: 0,
+        avatar_seed: String(b.avatar_seed ?? fullName.toLowerCase()),
+        is_active: 1,
+        phone: b.phone as string | undefined,
+        available_days: (b.available_days as DayOfWeek[] | undefined) ?? undefined,
+        shift_start: b.shift_start as string | undefined,
+        shift_end: b.shift_end as string | undefined,
+      };
+      BARBERS.push(barber);
+      return barber;
+    });
+    return ok({ message: created.map(barberWorkspaceMock) }, config);
+  }
+
+  if (url.endsWith('/api/method/barberbook.api.staff.my_shops')) {
+    const merged = { ...params, ...(body ?? {}) } as Record<string, unknown>;
+    const wantPhone = normalizePhone(String(merged.phone ?? ''));
+    const mine = BARBERS.filter((bar) => {
+      if (bar.user === MOCK_USER.email) return true;
+      // Auto-link any barber a shop owner pre-created for this phone number.
+      if (wantPhone && normalizePhone(bar.phone) === wantPhone) {
+        bar.user = MOCK_USER.email; // claim the record
+        return true;
+      }
+      return false;
+    });
+    return ok({ message: mine.map(barberWorkspaceMock) }, config);
+  }
+
+  if (url.endsWith('/api/method/barberbook.api.staff.update_profile')) {
+    const b = body ?? {};
+    const mine = BARBERS.filter((bar) => bar.user === MOCK_USER.email);
+    const fullName = typeof b.full_name === 'string' ? b.full_name.trim() : undefined;
+    mine.forEach((bar) => {
+      // Personal fields apply to every shop the barber works in.
+      if (fullName) {
+        bar.full_name = fullName;
+        bar.short_name = shortName(fullName);
+        bar.initials = initialsOf(fullName);
+      }
+      if (typeof b.specialties === 'string') bar.specialties = b.specialties;
+      if (b.years_experience != null) bar.years_experience = Number(b.years_experience);
+      if (typeof b.phone === 'string') bar.phone = b.phone;
+      if (typeof b.avatar_seed === 'string') bar.avatar_seed = b.avatar_seed;
+      bar.modified = new Date().toISOString();
+    });
+    // Schedule is per-shop: only the named record.
+    const targetName = typeof b.barber === 'string' ? b.barber : undefined;
+    const target = targetName ? mine.find((bar) => bar.name === targetName) : undefined;
+    if (target) {
+      if (Array.isArray(b.available_days)) target.available_days = b.available_days as DayOfWeek[];
+      if (typeof b.shift_start === 'string') target.shift_start = b.shift_start;
+      if (typeof b.shift_end === 'string') target.shift_end = b.shift_end;
+    }
+    return ok({ message: mine.map(barberWorkspaceMock) }, config);
+  }
+
   if (url.endsWith('/api/method/barberbook.api.staff.schedule')) {
     const merged = { ...params, ...(body ?? {}) } as Record<string, unknown>;
-    const barberId = String(merged.barber ?? 'BB-BAR-2001');
+    const barberId = String(merged.barber ?? '');
     const dateStr = String(merged.date ?? new Date().toISOString().slice(0, 10));
-    // Second appointment is the one currently being served — see `in_chair`.
-    const at = (h: number, m: number) => {
-      const d = new Date(`${dateStr}T00:00:00`);
-      d.setHours(h, m, 0, 0);
-      return d.toISOString().slice(0, 19);
-    };
-    const appointments = [
-      {
-        name: 'STF-1',
-        customer_name: 'Aarav Mehta',
-        customer_id: 'cust-aarav',
-        service_summary: "Men's Haircut",
-        scheduled_at: at(9, 30),
-        duration_minutes: 30,
-        status: 'Completed' as const,
-        total_amount: 350,
-        currency: 'INR',
-      },
-      {
-        name: 'STF-2',
-        customer_name: 'Priya Iyer',
-        customer_id: 'cust-priya',
-        service_summary: 'Skin Fade',
-        scheduled_at: at(10, 30),
-        duration_minutes: 45,
-        status: 'InService' as const,
-        total_amount: 800,
-        currency: 'INR',
-        in_chair: true,
-      },
-      {
-        name: 'STF-3',
-        customer_name: 'Imran K.',
-        customer_id: 'cust-imran',
-        service_summary: 'Combo · Beard',
-        scheduled_at: at(12, 0),
-        duration_minutes: 50,
-        status: 'Confirmed' as const,
-        total_amount: 500,
-        currency: 'INR',
-      },
-      {
-        name: 'STF-4',
-        customer_name: 'Sara A.',
-        customer_id: 'cust-sara',
-        service_summary: "Men's Haircut",
-        scheduled_at: at(14, 30),
-        duration_minutes: 30,
-        status: 'Confirmed' as const,
-        total_amount: 350,
-        currency: 'INR',
-      },
-      {
-        name: 'STF-5',
-        customer_name: 'Devansh',
-        customer_id: 'cust-dev',
-        service_summary: 'Beard Trim',
-        scheduled_at: at(16, 0),
-        duration_minutes: 20,
-        status: 'Confirmed' as const,
-        total_amount: 200,
-        currency: 'INR',
-      },
-    ];
+    const appointments = BOOKINGS.filter(
+      (b) =>
+        b.barber === barberId &&
+        b.scheduled_at.slice(0, 10) === dateStr &&
+        b.status !== 'Cancelled',
+    )
+      .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))
+      .map((b) => ({
+        name: b.name,
+        customer_name: b.customer,
+        customer_id: b.customer,
+        service_summary: `${b.services.length} service${b.services.length === 1 ? '' : 's'}`,
+        scheduled_at: b.scheduled_at,
+        duration_minutes: b.duration_minutes,
+        status: b.status,
+        total_amount: b.total_amount,
+        currency: b.currency,
+        in_chair: b.status === 'InService',
+      }));
     const billed = appointments
       .filter((a) => a.status === 'Completed' || a.status === 'InService')
       .reduce((s, a) => s + a.duration_minutes, 0);
@@ -649,7 +756,7 @@ export function routeMock(config: AxiosRequestConfig): AxiosResponse | null {
           date: dateStr,
           total_bookings: appointments.length,
           billed_minutes: billed,
-          tips_today: 420,
+          tips_today: 0,
           currency: 'INR',
           appointments,
         },
@@ -660,32 +767,16 @@ export function routeMock(config: AxiosRequestConfig): AxiosResponse | null {
 
   if (url.endsWith('/api/method/barberbook.api.staff.in_service')) {
     const merged = { ...params, ...(body ?? {}) } as Record<string, unknown>;
-    const barberId = String(merged.barber ?? 'BB-BAR-2001');
-    const startedAt = new Date(Date.now() - 18 * 60 * 1000).toISOString().slice(0, 19);
+    const barberId = String(merged.barber ?? '');
+    const active = BOOKINGS.find((b) => b.barber === barberId && b.status === 'InService') ?? null;
     return ok(
       {
         message: {
-          booking: {
-            ...baseAuditMock(),
-            doctype: 'BB Booking',
-            name: 'STF-2',
-            customer: 'cust-priya',
-            shop: 'BB-SHOP-00001',
-            barber: barberId,
-            scheduled_at: startedAt,
-            duration_minutes: 45,
-            services: [{ service: 'BB-SVC-1101', duration_minutes: 45, price: 800 }],
-            status: 'InService',
-            total_amount: 800,
-            currency: 'INR',
-            payment_status: 'Pending',
-            token_code: 'BB-IN-007',
-          },
-          customer_name: 'Priya Iyer',
-          customer_id: 'cust-priya',
-          notes_from_last_visit:
-            'Likes a tight skin fade, keeps top length ~3 inches. Allergic to scented gels.',
-          started_at: startedAt,
+          booking: active,
+          customer_name: active?.customer ?? null,
+          customer_id: active?.customer ?? null,
+          notes_from_last_visit: active?.notes ?? null,
+          started_at: active?.scheduled_at ?? null,
         },
       },
       config,
@@ -693,78 +784,44 @@ export function routeMock(config: AxiosRequestConfig): AxiosResponse | null {
   }
 
   if (url.endsWith('/api/method/barberbook.api.staff.complete')) {
-    return ok(
-      {
-        message: {
-          ...baseAuditMock(),
-          doctype: 'BB Booking',
-          name: 'STF-2',
-          status: 'Completed',
-          total_amount: 800,
-          currency: 'INR',
-        },
-      },
-      config,
-    );
+    const merged = { ...params, ...(body ?? {}) } as Record<string, unknown>;
+    const name = String(merged.booking ?? '');
+    const row = BOOKINGS.find((b) => b.name === name);
+    if (!row) return notFound(config, `Booking '${name}' not found`);
+    row.status = 'Completed';
+    row.modified = new Date().toISOString();
+    return ok({ message: row }, config);
   }
 
   if (url.endsWith('/api/method/barberbook.api.staff.customer')) {
     const merged = { ...params, ...(body ?? {}) } as Record<string, unknown>;
-    const customerId = String(merged.customer_id ?? 'cust-priya');
+    const customerId = String(merged.customer_id ?? '');
+    const mine = BOOKINGS.filter((b) => b.customer === customerId);
+    const completed = mine.filter((b) => b.status === 'Completed');
     return ok(
       {
         message: {
           customer_id: customerId,
-          full_name: 'Priya Iyer',
-          avatar_seed: 'priya-iyer',
-          phone: '+91 98000 31415',
-          preferences: {
-            hair: 'Tight skin fade · top ~3"',
-            beard: 'Trim only, square edge',
-            allergies: 'Scented gels',
-            music: 'Old-school hip-hop',
-            notes: 'Always early. Tips well after a clean fade.',
-          },
+          full_name: customerId,
+          avatar_seed: customerId,
+          phone: '',
+          preferences: {},
           stats: {
-            visits_with_you: 9,
-            total_spent: 6400,
+            visits_with_you: completed.length,
+            total_spent: completed.reduce((s, b) => s + (b.total_amount ?? 0), 0),
             currency: 'INR',
-            avg_rating: 4.9,
+            avg_rating: 0,
           },
-          past_visits: [
-            {
-              name: 'BB-BKG-7001',
-              scheduled_at: '2026-04-22T17:00:00',
-              service_summary: 'Skin Fade',
-              rating: 5,
-              total_amount: 800,
-              currency: 'INR',
-            },
-            {
-              name: 'BB-BKG-6800',
-              scheduled_at: '2026-03-18T18:30:00',
-              service_summary: 'Combo',
-              rating: 5,
-              total_amount: 500,
-              currency: 'INR',
-            },
-            {
-              name: 'BB-BKG-6720',
-              scheduled_at: '2026-02-20T11:00:00',
-              service_summary: 'Skin Fade',
-              rating: 5,
-              total_amount: 800,
-              currency: 'INR',
-            },
-            {
-              name: 'BB-BKG-6602',
-              scheduled_at: '2026-01-23T16:00:00',
-              service_summary: "Men's Haircut",
-              rating: 4,
-              total_amount: 350,
-              currency: 'INR',
-            },
-          ],
+          past_visits: completed
+            .sort((a, b) => b.scheduled_at.localeCompare(a.scheduled_at))
+            .slice(0, 10)
+            .map((b) => ({
+              name: b.name,
+              scheduled_at: b.scheduled_at,
+              service_summary: `${b.services.length} service${b.services.length === 1 ? '' : 's'}`,
+              total_amount: b.total_amount,
+              currency: b.currency,
+            })),
         },
       },
       config,
@@ -772,53 +829,28 @@ export function routeMock(config: AxiosRequestConfig): AxiosResponse | null {
   }
 
   if (url.endsWith('/api/method/barberbook.api.staff.earnings')) {
+    const merged = { ...params, ...(body ?? {}) } as Record<string, unknown>;
+    const barberId = String(merged.barber ?? '');
     const today = new Date();
     const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
       .toISOString()
       .slice(0, 10);
+    const monthBookings = BOOKINGS.filter(
+      (b) => b.barber === barberId && b.scheduled_at.slice(0, 10) >= monthStart,
+    );
+    const completed = monthBookings.filter((b) => b.status === 'Completed');
     return ok(
       {
         message: {
-          barber: String(params.barber ?? 'BB-BAR-2001'),
+          barber: barberId,
           month_start: monthStart,
-          total_amount: 84_200,
+          total_amount: completed.reduce((s, b) => s + (b.total_amount ?? 0), 0),
           currency: 'INR',
-          cuts: 142,
-          avg_rating: 4.9,
-          repeat_rate: 0.62,
-          no_shows: 3,
-          recent_tips: [
-            {
-              name: 'TIP-1',
-              customer_name: 'Priya Iyer',
-              amount: 100,
-              posted_at: new Date(today.getTime() - 2 * 60 * 60 * 1000).toISOString(),
-              message: 'Sharpest fade in town. Thank you!',
-              rating: 5,
-            },
-            {
-              name: 'TIP-2',
-              customer_name: 'Aarav Mehta',
-              amount: 50,
-              posted_at: new Date(today.getTime() - 5 * 60 * 60 * 1000).toISOString(),
-              rating: 5,
-            },
-            {
-              name: 'TIP-3',
-              customer_name: null,
-              amount: 200,
-              posted_at: new Date(today.getTime() - 26 * 60 * 60 * 1000).toISOString(),
-              message: 'My son loved it. ✂️',
-              rating: 5,
-            },
-            {
-              name: 'TIP-4',
-              customer_name: 'Devansh',
-              amount: 30,
-              posted_at: new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-              rating: 4,
-            },
-          ],
+          cuts: completed.length,
+          avg_rating: 0,
+          repeat_rate: 0,
+          no_shows: monthBookings.filter((b) => b.status === 'NoShow').length,
+          recent_tips: [],
         },
       },
       config,
@@ -1039,75 +1071,54 @@ function baseAuditMock() {
   };
 }
 
-/** Synthetic timeline entries so the OwnerToday screen has rows even when
- *  no real bookings have been created in the mock yet. */
-function padTimelineForShop(shop: string) {
-  const today = new Date();
-  const at = (h: number, m: number) => {
-    const d = new Date(today);
-    d.setHours(h, m, 0, 0);
-    return d.toISOString().slice(0, 19);
+function shortName(full: string): string {
+  const parts = full.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0];
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
+}
+
+function initialsOf(full: string): string {
+  const parts = full.trim().split(/\s+/);
+  const first = parts[0]?.[0] ?? '';
+  const last = parts.length > 1 ? (parts[parts.length - 1][0] ?? '') : '';
+  return (first + last).toUpperCase() || 'BB';
+}
+
+/** Build the BarberWorkspace shape the staff client expects from a Barber. */
+function barberWorkspaceMock(barber: Barber) {
+  const shop = SHOPS.find((s) => s.name === barber.shop);
+  const bookings = BOOKINGS.filter((bk) => bk.shop === barber.shop && bk.barber === barber.name);
+  return {
+    barber: barber.name,
+    barber_name: barber.full_name,
+    specialties: barber.specialties,
+    available_days: barber.available_days,
+    shift_start: barber.shift_start,
+    shift_end: barber.shift_end,
+    shop: shop ?? {
+      ...baseAuditMock(),
+      doctype: 'BB Shop' as const,
+      name: barber.shop,
+      shop_name: barber.shop,
+      slug: barber.shop.toLowerCase(),
+      owner_user: '',
+      status: 'Active' as const,
+      country: 'IN' as const,
+      city: '',
+      address_line: '',
+      pincode: '',
+      latitude: 0,
+      longitude: 0,
+      rating: 0,
+      rating_count: 0,
+      price_tier: 2 as const,
+      is_open: 1 as const,
+      accepts_walkin: 1 as const,
+      cover_variant: 0 as const,
+      currency: 'INR' as const,
+    },
+    bookings_today: bookings.length,
+    tips_today: 0,
+    currency: shop?.currency ?? 'INR',
   };
-  return [
-    {
-      name: 'MOCK-T-1',
-      shop,
-      barber: 'BB-BAR-2001',
-      scheduled_at: at(10, 0),
-      duration_minutes: 30,
-      status: 'Completed' as const,
-      total_amount: 350,
-      currency: 'INR' as const,
-      customer_name: 'Aarav Mehta',
-      service_summary: "Men's Haircut",
-    },
-    {
-      name: 'MOCK-T-2',
-      shop,
-      barber: 'BB-BAR-2002',
-      scheduled_at: at(11, 30),
-      duration_minutes: 45,
-      status: 'InService' as const,
-      total_amount: 800,
-      currency: 'INR' as const,
-      customer_name: 'Priya Iyer',
-      service_summary: 'Skin Fade',
-    },
-    {
-      name: 'MOCK-T-3',
-      shop,
-      barber: 'BB-BAR-2001',
-      scheduled_at: at(13, 0),
-      duration_minutes: 50,
-      status: 'Confirmed' as const,
-      total_amount: 500,
-      currency: 'INR' as const,
-      customer_name: 'Imran K.',
-      service_summary: 'Combo',
-    },
-    {
-      name: 'MOCK-T-4',
-      shop,
-      barber: 'BB-BAR-2002',
-      scheduled_at: at(15, 30),
-      duration_minutes: 30,
-      status: 'Confirmed' as const,
-      total_amount: 350,
-      currency: 'INR' as const,
-      customer_name: 'Sara A.',
-      service_summary: "Men's Haircut",
-    },
-    {
-      name: 'MOCK-T-5',
-      shop,
-      barber: 'BB-BAR-2001',
-      scheduled_at: at(17, 0),
-      duration_minutes: 20,
-      status: 'Cancelled' as const,
-      total_amount: 200,
-      currency: 'INR' as const,
-      customer_name: 'Devansh',
-      service_summary: 'Beard Trim',
-    },
-  ];
 }
